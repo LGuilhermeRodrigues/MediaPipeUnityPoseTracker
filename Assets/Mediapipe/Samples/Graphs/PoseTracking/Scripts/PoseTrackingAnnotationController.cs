@@ -19,13 +19,13 @@ public class PoseTrackingAnnotationController : AnnotationController {
   }
 
   public override void Clear() {
-    poseLandmarkListAnnotation.GetComponent<PoseLandmarkListAnnotationController>().Clear();
+    poseLandmarkListAnnotation.GetComponent<FullBodyPoseLandmarkListAnnotationController>().Clear();
     poseDetectionAnnotation.GetComponent<DetectionAnnotationController>().Clear();
   }
 
   public void Draw(Transform screenTransform, NormalizedLandmarkList poseLandmarkList, Detection poseDetection, bool isFlipped = false)
   {
-    poseLandmarkListAnnotation.GetComponent<PoseLandmarkListAnnotationController>().Draw(screenTransform, poseLandmarkList, isFlipped);
+    poseLandmarkListAnnotation.GetComponent<FullBodyPoseLandmarkListAnnotationController>().Draw(screenTransform, poseLandmarkList, isFlipped);
     poseDetectionAnnotation.GetComponent<DetectionAnnotationController>().Draw(screenTransform, poseDetection, isFlipped);
   }
 }

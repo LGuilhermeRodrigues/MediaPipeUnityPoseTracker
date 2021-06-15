@@ -1,5 +1,6 @@
 .nuget/
 .vscode/
+.idea
 .vs/
 .DS_Store
 
@@ -27,3 +28,5 @@ Packages/com.github.homuler.mediapipe/Runtime/Resources/*
 Packages/com.github.homuler.mediapipe/Runtime/Resources/object_detection_3d.bytes.meta
 Packages/com.github.homuler.mediapipe/Runtime/Plugins/Protobuf*
 Packages/com.github.homuler.mediapipe/Runtime/Scripts/Protobuf/**/*.cs
+Packages/Google.*
+Packages/System.*

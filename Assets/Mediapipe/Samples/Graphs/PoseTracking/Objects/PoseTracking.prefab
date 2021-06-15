@@ -61,7 +61,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 178c0f33a7c561b3db556cab0a69aa75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  poseLandmarkListPrefab: {fileID: 2712965234984282611, guid: 52f3167d117fe05eb8f7ae8c84e4d403,
+  poseLandmarkListPrefab: {fileID: 7166525400038315749, guid: 69cf28587972333cca1eb4c1a1ec7e6d,
     type: 3}
   poseDetectionPrefab: {fileID: 1405412484651109527, guid: 3779864e7ead10e31b03fc362f4746de,
     type: 3}
