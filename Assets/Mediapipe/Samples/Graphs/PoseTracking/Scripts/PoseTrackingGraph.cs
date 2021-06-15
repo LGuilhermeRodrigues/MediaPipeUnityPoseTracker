@@ -28,6 +28,8 @@ public class PoseTrackingGraph : DemoGraph {
   private BoolPacket poseDetectionPresencePacket;
 
   private SidePacket sidePacket;
+  
+  private PoseManager poseManager;
 
   public override Status StartRun() {
     poseLandmarksStreamPoller = graph.AddOutputStreamPoller<NormalizedLandmarkList>(poseLandmarksStream).Value();
@@ -46,13 +48,15 @@ public class PoseTrackingGraph : DemoGraph {
     sidePacket.Emplace("model_complexity", new IntPacket((int)modelComplexity));
     sidePacket.Emplace("smooth_landmarks", new BoolPacket(smoothLandmarks));
 
+    poseManager = GameObject.Find("PoseManager").GetComponent<PoseManager>();
+    
     return graph.StartRun(sidePacket);
   }
 
   public override void RenderOutput(WebCamScreenController screenController, TextureFrame textureFrame) {
     var poseTrackingValue = FetchNextPoseTrackingValue();
     RenderAnnotation(screenController, poseTrackingValue);
-
+    poseManager.SetPose(poseTrackingValue.PoseLandmarkList.Landmark);
     screenController.DrawScreen(textureFrame);
   }
 
