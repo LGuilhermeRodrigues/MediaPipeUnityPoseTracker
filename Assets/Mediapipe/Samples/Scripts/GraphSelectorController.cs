@@ -33,11 +33,11 @@ public class GraphSelectorController : MonoBehaviour {
   void InitializeOptions() {
     graphs = new Dictionary<string, GameObject>();
 
+    AddGraph("Pose Tracking", poseTrackingGraph);
     AddGraph("Face Detection", faceDetectionGraph);
     AddGraph("Face Mesh", faceMeshGraph);
     AddGraph("Iris Tracking", irisTrackingGraph);
     AddGraph("Hand Tracking", handTrackingGraph);
-    AddGraph("Pose Tracking", poseTrackingGraph);
     AddGraph("Holistic", holisticGraph);
 #if !UNITY_IOS
     AddGraph("Hair Segmentation", hairSegmentationGraph);
