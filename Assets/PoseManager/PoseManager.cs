@@ -43,7 +43,10 @@ public class PoseManager : MonoBehaviour
     }
 
     private static RepeatedField<NormalizedLandmark> landmarks;
-    
+
+    private int counter = 0;
+
+    private bool startCounter = true;
     // Start is called before the first frame update
     void Start()
     {
@@ -58,6 +61,12 @@ public class PoseManager : MonoBehaviour
 
     public void SetPose(RepeatedField<NormalizedLandmark> newLandmarks)
     {
+        if (startCounter)
+        {
+            StartCoroutine(FramesPerSecondCoroutine());
+            startCounter = false;
+        }
+        
         if (newLandmarks.Count > 0)
         {
             landmarks = newLandmarks;
@@ -76,6 +85,20 @@ public class PoseManager : MonoBehaviour
         {
             result = 360 - result;
         }
-        Debug.Log(result);
+        //Debug.Log(result);
+        counter = counter + 1;
+    }
+    
+    IEnumerator FramesPerSecondCoroutine()
+    {
+        //Print the time of when the function is first called.
+        Debug.Log("Started Coroutine at timestamp : " + Time.time);
+
+        //yield on a new YieldInstruction that waits for 5 seconds.
+        yield return new WaitForSeconds(10);
+
+        //After we have waited 5 seconds print the time again.
+        Debug.Log("Finished Coroutine at timestamp : " + Time.time);
+        Debug.Log(counter+" frames in 10 seconds");
     }
 }
