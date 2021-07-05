@@ -120,9 +120,7 @@ pkg_asset(
     name = "mediapipe_assets",
     srcs = [
         "@com_google_mediapipe//mediapipe/modules/pose_detection:pose_detection.tflite",
-        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_lite.tflite",
         "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
-        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_heavy.tflite",
     ],
 )
 
