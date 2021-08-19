@@ -25,6 +25,7 @@
 input_stream: "input_video"
 
 output_stream: "pose_landmarks"
+output_stream: "pose_world_landmarks"
 output_stream: "pose_detection"
 output_stream: "pose_landmarks_presence"
 output_stream: "pose_detection_presence"
@@ -42,7 +43,7 @@ output_stream: "pose_detection_presence"
 node {
   calculator: "FlowLimiterCalculator"
   input_stream: "input_video"
-  input_stream: "FINISHED:pose_landmarks_presence"
+  input_stream: "FINISHED:pose_detection_presence"
   input_stream_info: {
     tag_index: "FINISHED"
     back_edge: true
@@ -72,6 +73,7 @@ node {
   calculator: "PoseLandmarkGpu"
   input_stream: "IMAGE:transformed_input_video"
   output_stream: "LANDMARKS:pose_landmarks"
+  output_stream: "WORLD_LANDMARKS:pose_world_landmarks"
   output_stream: "DETECTION:pose_detection"
   output_stream: "ROI_FROM_LANDMARKS:roi_from_landmarks"
 }

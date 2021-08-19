@@ -201,7 +201,7 @@ class BuildCommand(Command):
     if self.linkopt is None or len(self.linkopt) == 0:
       return []
 
-    return ['--linkopt="{}"'.format(' '.join(self.linkopt))]
+    return ['--linkopt={}'.format(l) for l in self.linkopt]
 
   def _build_opencv_switch(self):
     commands = [f'--@opencv//:switch={self.opencv}']
@@ -358,7 +358,7 @@ class Argument:
     build_command_parser.add_argument('--android', choices=['arm', 'arm64'])
     build_command_parser.add_argument('--ios', choices=['arm64'])
     build_command_parser.add_argument('--resources', action=argparse.BooleanOptionalAction, default=True)
-    build_command_parser.add_argument('--compilation_mode', '-c', choices=['fastbuild', 'opt', 'debug'], default='opt')
+    build_command_parser.add_argument('--compilation_mode', '-c', choices=['fastbuild', 'opt', 'dbg'], default='opt')
     build_command_parser.add_argument('--opencv', choices=['local', 'cmake'], default='local', help='Decide to which OpenCV to link for Desktop native libraries')
     build_command_parser.add_argument('--opencv_deps', action='append', choices=['ffmpeg'], default=[], help='OpenCV Dependencies (only used when `--opencv=cmake`)')
     build_command_parser.add_argument('--include_opencv_libs', action='store_true', help='Include OpenCV\'s native libraries for Desktop')

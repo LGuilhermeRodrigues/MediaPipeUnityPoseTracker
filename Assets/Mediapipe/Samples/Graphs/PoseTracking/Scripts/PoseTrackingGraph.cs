@@ -15,6 +15,10 @@ public class PoseTrackingGraph : DemoGraph {
   private OutputStreamPoller<NormalizedLandmarkList> poseLandmarksStreamPoller;
   private NormalizedLandmarkListPacket poseLandmarksPacket;
 
+  private const string poseWorldLandmarksStream = "pose_world_landmarks";
+  private OutputStreamPoller<LandmarkList> poseWorldLandmarksStreamPoller;
+  private LandmarkListPacket poseWorldLandmarksPacket;
+
   private const string poseDetectionStream = "pose_detection";
   private OutputStreamPoller<Detection> poseDetectionStreamPoller;
   private DetectionPacket poseDetectionPacket;
@@ -34,6 +38,9 @@ public class PoseTrackingGraph : DemoGraph {
   public override Status StartRun() {
     poseLandmarksStreamPoller = graph.AddOutputStreamPoller<NormalizedLandmarkList>(poseLandmarksStream).Value();
     poseLandmarksPacket = new NormalizedLandmarkListPacket();
+
+    poseWorldLandmarksStreamPoller = graph.AddOutputStreamPoller<LandmarkList>(poseWorldLandmarksStream).Value();
+    poseWorldLandmarksPacket = new LandmarkListPacket();
 
     poseDetectionStreamPoller = graph.AddOutputStreamPoller<Detection>(poseDetectionStream).Value();
     poseDetectionPacket = new DetectionPacket();
@@ -78,6 +85,10 @@ public class PoseTrackingGraph : DemoGraph {
 
   private NormalizedLandmarkList FetchNextPoseLandmarks() {
     return FetchNext(poseLandmarksStreamPoller, poseLandmarksPacket, poseLandmarksStream);
+  }
+
+  private LandmarkList FetchNextPoseWorldLandmarks() {
+    return FetchNext(poseWorldLandmarksStreamPoller, poseWorldLandmarksPacket, poseWorldLandmarksStream);
   }
 
   private Detection FetchNextPoseDetection() {

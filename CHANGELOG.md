@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.6.2](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.6.1...v0.6.2) (2021-07-11)
+
+
+### Features
+
+* **example:** enable to get pose world landmarks ([abbade0](https://github.com/homuler/MediaPipeUnityPlugin/commit/abbade082cbed35209f5c28ca5790f6c59c5e045))
+* **example:** enable to switch face detection models ([58084e8](https://github.com/homuler/MediaPipeUnityPlugin/commit/58084e8e46c67b5ad14c0fc964b84abe613be96d))
+
+### [0.6.1](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.6.0...v0.6.1) (2021-07-04)
+
+
+### Bug Fixes
+
+* cannot install msys2 packages ([5db311e](https://github.com/homuler/MediaPipeUnityPlugin/commit/5db311e825a2a9cad174799805dcdf62760dcf03))
+* holistic sample flickers ([49c275b](https://github.com/homuler/MediaPipeUnityPlugin/commit/49c275b30b35c07dcd6d9a702bd4b864cd330abd))
+* rules_cc's branch name ([#211](https://github.com/homuler/MediaPipeUnityPlugin/issues/211)) ([24576ce](https://github.com/homuler/MediaPipeUnityPlugin/commit/24576ce968c05c748c1ed56f82866c30ea9190d4))
+* typo (debug -> dbg) ([67fcb0a](https://github.com/homuler/MediaPipeUnityPlugin/commit/67fcb0aca0b38cf61ac9073b8fb9a1f071adbe7a))
+* use gcc-10 and g++-10 ([a3332df](https://github.com/homuler/MediaPipeUnityPlugin/commit/a3332df9049a5337bcb3478e3bfa5924356d5b25))
+
 ## [0.6.0](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.5.3...v0.6.0) (2021-05-15)
 
 

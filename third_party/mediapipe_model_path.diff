@@ -245,7 +245,7 @@ index 9bc43ba..088f8f8 100644
      LOG(ERROR) << "Failed to load animation asset.";
      return absl::UnknownError("Failed to load animation asset.");
 diff --git a/mediapipe/util/BUILD b/mediapipe/util/BUILD
-index 1fa71c6..758a81f 100644
+index 11f08ad..4d2db85 100644
 --- a/mediapipe/util/BUILD
 +++ b/mediapipe/util/BUILD
 @@ -155,12 +155,8 @@ cc_library(
@@ -263,20 +263,12 @@ index 1fa71c6..758a81f 100644
      hdrs = [
          "resource_util.h",
      ],
-@@ -176,27 +172,14 @@ cc_library(
-     deps = [
-         ":resource_util_custom",
-         "@com_google_absl//absl/container:flat_hash_map",
-+        "//mediapipe/framework/deps:file_path",
-         "//mediapipe/framework/port:ret_check",
-         "//mediapipe/framework/port:singleton",
-         "//mediapipe/framework/port:status",
+@@ -183,19 +179,7 @@ cc_library(
          "//mediapipe/framework/port:statusor",
          "//mediapipe/framework/port:file_helpers",
          "@com_google_absl//absl/strings",
 -    ] + select({
 -        "//conditions:default": [
--            "//mediapipe/framework/deps:file_path",
 -            "@com_google_absl//absl/flags:flag",
 -        ],
 -        "//mediapipe:android": [
@@ -285,7 +277,6 @@ index 1fa71c6..758a81f 100644
 -        ],
 -        "//mediapipe:ios": [],
 -        "//mediapipe:macos": [
--            "//mediapipe/framework/deps:file_path",
 -            "@com_google_absl//absl/flags:flag",
 -        ],
 -    }),
@@ -294,7 +285,7 @@ index 1fa71c6..758a81f 100644
  
  cc_library(
 diff --git a/mediapipe/util/resource_util.cc b/mediapipe/util/resource_util.cc
-index 042d1e8..89d9e9b 100644
+index 8f40154..dfebafd 100644
 --- a/mediapipe/util/resource_util.cc
 +++ b/mediapipe/util/resource_util.cc
 @@ -27,6 +27,7 @@ namespace mediapipe {
@@ -306,7 +297,7 @@ index 042d1e8..89d9e9b 100644
  
  absl::Status GetResourceContents(const std::string& path, std::string* output,
 @@ -37,8 +38,19 @@ absl::Status GetResourceContents(const std::string& path, std::string* output,
-   return absl::OkStatus();
+   return internal::DefaultGetResourceContents(path, output, read_as_binary);
  }
  
 +absl::StatusOr<std::string> PathToResourceAsFile(const std::string& path) {
