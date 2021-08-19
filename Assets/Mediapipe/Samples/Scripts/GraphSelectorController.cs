@@ -34,19 +34,7 @@ public class GraphSelectorController : MonoBehaviour {
     graphs = new Dictionary<string, GameObject>();
 
     AddGraph("Pose Tracking", poseTrackingGraph);
-    AddGraph("Face Detection", faceDetectionGraph);
-    AddGraph("Face Mesh", faceMeshGraph);
-    AddGraph("Iris Tracking", irisTrackingGraph);
     AddGraph("Hand Tracking", handTrackingGraph);
-    AddGraph("Holistic", holisticGraph);
-#if !UNITY_IOS
-    AddGraph("Hair Segmentation", hairSegmentationGraph);
-#endif
-    AddGraph("Object Detection", objectDetectionGraph);
-    AddGraph("Object Detection 3d", objectDetection3dGraph);
-    AddGraph("Box Tracking", boxTrackingGraph);
-    AddGraph("Instant Motion Tracking", instantMotionTrackingGraph);
-    AddGraph("Official Demo", officialDemoGraph);
 
     var graphSelector = GetComponent<Dropdown>();
     graphSelector.ClearOptions();

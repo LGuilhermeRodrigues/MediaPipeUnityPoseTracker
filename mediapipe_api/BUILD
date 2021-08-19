@@ -86,6 +86,7 @@ cc_library(
         "@com_google_mediapipe//mediapipe/calculators/image:image_transformation_calculator",
     ] + select({
         "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
+        "@com_google_mediapipe//mediapipe/graphs/hand_tracking:desktop_tflite_calculators",
             "@com_google_mediapipe//mediapipe/graphs/pose_tracking:pose_tracking_cpu_deps",
             "@com_google_mediapipe//mediapipe/graphs/tracking:desktop_calculators",
         ],
@@ -94,6 +95,7 @@ cc_library(
             #   If you're building for Android with debug symobls (--compilation_mode=dbg), exclude `instant_motion_tracking_deps`
             #   or exclude the other deps defined under `mediapipe/graphs`.
             #   Otherwise the app will crash (MediaPipe may have some bugs).
+            "@com_google_mediapipe//mediapipe/graphs/hand_tracking:mobile_calculators",
             "@com_google_mediapipe//mediapipe/graphs/pose_tracking:pose_tracking_gpu_deps",
             "@com_google_mediapipe//mediapipe/graphs/tracking:mobile_calculators",
         ],
@@ -119,6 +121,10 @@ pkg_zip(
 pkg_asset(
     name = "mediapipe_assets",
     srcs = [
+        "@com_google_mediapipe//mediapipe/modules/hand_landmark:hand_landmark.tflite",
+        "@com_google_mediapipe//mediapipe/modules/hand_landmark:handedness.txt",
+        "@com_google_mediapipe//mediapipe/modules/holistic_landmark:hand_recrop.tflite",
+        "@com_google_mediapipe//mediapipe/modules/palm_detection:palm_detection.tflite",
         "@com_google_mediapipe//mediapipe/modules/pose_detection:pose_detection.tflite",
         "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
     ],
