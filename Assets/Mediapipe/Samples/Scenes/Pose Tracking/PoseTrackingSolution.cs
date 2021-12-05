@@ -41,6 +41,7 @@ namespace Mediapipe.Unity.PoseTracking
       get => _graphRunner.timeoutMillisec;
       set => _graphRunner.SetTimeoutMillisec(value);
     }
+    private PoseManager _poseManager;
 
     public override void Play()
     {
@@ -74,6 +75,8 @@ namespace Mediapipe.Unity.PoseTracking
 
     private IEnumerator Run()
     {
+      _poseManager = GameObject.Find("PoseManager").GetComponent<PoseManager>();
+
       var graphInitRequest = _graphRunner.WaitForInit();
       var imageSource = ImageSourceProvider.ImageSource;
 
@@ -146,6 +149,10 @@ namespace Mediapipe.Unity.PoseTracking
           _poseLandmarksAnnotationController.DrawNow(value.poseLandmarks);
           _poseWorldLandmarksAnnotationController.DrawNow(value.poseWorldLandmarks);
           _roiFromLandmarksAnnotationController.DrawNow(value.roiFromLandmarks);
+          if (value.poseWorldLandmarks!=null)
+          {
+            _poseManager.SetPose(value.poseWorldLandmarks.Landmark);
+          }
         }
 
         yield return new WaitForEndOfFrame();

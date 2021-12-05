@@ -42,24 +42,20 @@ public class PoseManager : MonoBehaviour
         R_FINDEX = 31
     }
 
-    private static RepeatedField<NormalizedLandmark> landmarks;
+    public enum rebasePose
+    {
+        
+    }
+
+    private static RepeatedField<Landmark> landmarks;
 
     private int counter = 0;
 
     private bool startCounter = true;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    private bool poseFound = false;
 
-    public void SetPose(RepeatedField<NormalizedLandmark> newLandmarks)
+    public void SetPose(RepeatedField<Landmark> newLandmarks)
     {
         if (startCounter)
         {
@@ -69,32 +65,54 @@ public class PoseManager : MonoBehaviour
         
         if (newLandmarks.Count > 0)
         {
+            poseFound = true;
             landmarks = newLandmarks;
-            get2DAngle(pose.L_WRIST, pose.L_ELBOW, pose.L_SHOULDER);
+            counter = counter + 1;
         }
     }
 
-    public void get2DAngle(pose idx_first, pose idx_mid, pose idx_last)
+    public bool hasPose()
     {
-        var first = landmarks[(int) idx_first];
-        var mid = landmarks[(int) idx_mid];
-        var last = landmarks[(int) idx_last];
-        var result = Mathf.Rad2Deg * (Mathf.Atan2(last.Y-mid.Y,last.X-mid.X)-Mathf.Atan2(first.Y-mid.Y,first.X-mid.X));
-        result = Mathf.Abs(result);
-        if (result > 180)
-        {
-            result = 360 - result;
-        }
-        //Debug.Log(result);
-        counter = counter + 1;
+        return poseFound;
     }
+
+    public Vector3 getPoint(pose idx_point)
+    {
+        if (hasPose())
+        {
+            return new Vector3(
+                landmarks[(int) idx_point].X*640,
+                (1f-landmarks[(int) idx_point].Y)*480,
+                -320*landmarks[(int) idx_point].Z);
+        }
+        else
+        {
+            return Vector3.zero;
+        }
+    }
+
+    public Vector3 getRawPoint(pose idx_point)
+    {
+        if (hasPose())
+        {
+            return new Vector3(
+                landmarks[(int) idx_point].X,
+                landmarks[(int) idx_point].Y,
+                -landmarks[(int) idx_point].Z);
+        }
+        else
+        {
+            return Vector3.zero;
+        }
+    }
+    
     
     public float get3DAngle(pose idx_first, pose idx_mid, pose idx_last)
     {
         var first = landmarks[(int) idx_first];
         var mid = landmarks[(int) idx_mid];
         var last = landmarks[(int) idx_last];
-
+        
         var b = new Vector3(mid.X, mid.Y, mid.Z);
         var ba = (new Vector3(first.X, first.Y, first.Z)) - b;
         var bc = (new Vector3(last.X, last.Y, last.Z)) - b;
