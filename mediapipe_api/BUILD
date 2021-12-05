@@ -1,8 +1,15 @@
+# Copyright (c) 2021 homuler
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
 load("@rules_pkg//:pkg.bzl", "pkg_zip")
 load("//mediapipe_api:import_model.bzl", "pkg_asset")
 
 cc_library(
     name = "mediapipe_c",
+    visibility = ["//visibility:public"],
     deps = [
         ":calculators",
         "//mediapipe_api/external:glog",
@@ -19,7 +26,9 @@ cc_library(
         "//mediapipe_api/framework/formats:rect",
         "//mediapipe_api/framework/port:logging",
         "//mediapipe_api/graphs/object_detection_3d/calculators:model_matrix",
+        "//mediapipe_api/graphs/instant_motion_tracking/calculators:transformations",
         "//mediapipe_api/modules/face_geometry/protos:face_geometry",
+        "//mediapipe_api/modules/objectron/calculators:annotation",
         "//mediapipe_api/util:resource_util",
     ] + select({
         "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [],
@@ -32,39 +41,32 @@ cc_library(
             "//mediapipe_api/gpu:gpu_buffer_format",
             "//mediapipe_api/gpu:gpu_shared_data_internal",
         ],
-    }) + select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [],
-        "@com_google_mediapipe//mediapipe:ios": [],
-        "//conditions:default": [
-            "//mediapipe_api/gpu:egl_surface_holder",
-        ],
     }),
-    visibility = ["//visibility:public"],
     alwayslink = True,
 )
 
 cc_binary(
     name = "libmediapipe_c.so",
-    deps = [":mediapipe_c"],
     linkshared = True,
     linkstatic = True,
     visibility = ["//visibility:public"],
+    deps = [":mediapipe_c"],
 )
 
 cc_binary(
     name = "libmediapipe_c.dylib",
-    deps = [":mediapipe_c"],
     linkshared = True,
     linkstatic = True,
     visibility = ["//visibility:public"],
+    deps = [":mediapipe_c"],
 )
 
 cc_binary(
     name = "libmediapipe_c.dll",
-    deps = [":mediapipe_c"],
     linkshared = True,
     linkstatic = True,
     visibility = ["//visibility:public"],
+    deps = [":mediapipe_c"],
 )
 
 alias(
@@ -86,11 +88,29 @@ cc_library(
         "@com_google_mediapipe//mediapipe/calculators/image:image_transformation_calculator",
     ] + select({
         "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
+<<<<<<< HEAD
         "@com_google_mediapipe//mediapipe/graphs/hand_tracking:desktop_tflite_calculators",
+=======
+            "//mediapipe_api/graphs/instant_motion_tracking/subgraphs:region_tracking_cpu",
+            "//mediapipe_api/modules/iris_landmark:iris_landmarks_from_face_landmarks_cpu",
+            "@com_google_mediapipe//mediapipe/graphs/face_detection:desktop_live_calculators",
+            "@com_google_mediapipe//mediapipe/graphs/face_detection:face_detection_full_range_desktop_live_deps",
+            "@com_google_mediapipe//mediapipe/graphs/face_mesh:desktop_live_calculators",
+            "@com_google_mediapipe//mediapipe/graphs/hair_segmentation:desktop_calculators",
+            "@com_google_mediapipe//mediapipe/graphs/hand_tracking:desktop_tflite_calculators",
+            "@com_google_mediapipe//mediapipe/graphs/holistic_tracking:holistic_tracking_cpu_graph_deps",
+            "@com_google_mediapipe//mediapipe/graphs/iris_tracking:iris_tracking_cpu_deps",
+            "@com_google_mediapipe//mediapipe/graphs/object_detection:desktop_tflite_calculators",
+            "@com_google_mediapipe//mediapipe/graphs/object_detection_3d:desktop_cpu_calculators",
+>>>>>>> upstream/master
             "@com_google_mediapipe//mediapipe/graphs/pose_tracking:pose_tracking_cpu_deps",
             "@com_google_mediapipe//mediapipe/graphs/tracking:desktop_calculators",
         ],
         "//conditions:default": [
+<<<<<<< HEAD
+=======
+            "//mediapipe_api/modules/iris_landmark:iris_landmarks_from_face_landmarks_gpu",
+>>>>>>> upstream/master
             # ATTENTION!
             #   If you're building for Android with debug symobls (--compilation_mode=dbg), exclude `instant_motion_tracking_deps`
             #   or exclude the other deps defined under `mediapipe/graphs`.
@@ -106,10 +126,10 @@ cc_library(
     name = "common",
     srcs = ["common.cc"],
     hdrs = ["common.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_mediapipe//mediapipe/framework/port:logging",
     ],
-    visibility = ["//visibility:public"],
     alwayslink = True,
 )
 
@@ -121,12 +141,28 @@ pkg_zip(
 pkg_asset(
     name = "mediapipe_assets",
     srcs = [
+<<<<<<< HEAD
+=======
+        "@com_google_mediapipe//mediapipe/models:hair_segmentation.tflite",
+        "@com_google_mediapipe//mediapipe/models:ssdlite_object_detection.tflite",
+        "@com_google_mediapipe//mediapipe/models:ssdlite_object_detection_labelmap.txt",
+        "@com_google_mediapipe//mediapipe/modules/face_detection:face_detection_full_range.tflite",
+        "@com_google_mediapipe//mediapipe/modules/face_detection:face_detection_full_range_sparse.tflite",
+        "@com_google_mediapipe//mediapipe/modules/face_detection:face_detection_short_range.tflite",
+        "@com_google_mediapipe//mediapipe/modules/face_landmark:face_landmark.tflite",
+        "@com_google_mediapipe//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
+>>>>>>> upstream/master
         "@com_google_mediapipe//mediapipe/modules/hand_landmark:hand_landmark.tflite",
         "@com_google_mediapipe//mediapipe/modules/hand_landmark:handedness.txt",
         "@com_google_mediapipe//mediapipe/modules/holistic_landmark:hand_recrop.tflite",
         "@com_google_mediapipe//mediapipe/modules/palm_detection:palm_detection.tflite",
         "@com_google_mediapipe//mediapipe/modules/pose_detection:pose_detection.tflite",
         "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
+<<<<<<< HEAD
+=======
+        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_heavy.tflite",
+        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_lite.tflite",
+>>>>>>> upstream/master
     ],
 )
 
@@ -151,6 +187,9 @@ pkg_zip(
         "//mediapipe_api/graphs/object_detection_3d/calculators:model_matrix_cs",
         "//mediapipe_api/modules/face_geometry/protos:face_geometry_cs",
         "//mediapipe_api/modules/face_geometry/protos:mesh_3d_cs",
+        "//mediapipe_api/modules/objectron/calculators:a_r_capture_metadata_cs",
+        "//mediapipe_api/modules/objectron/calculators:annotation_data_cs",
+        "//mediapipe_api/modules/objectron/calculators:object_cs",
     ],
     # TODO: keep directory structure
 )

@@ -14,6 +14,9 @@ except ImportError:
 
 _BAZEL_BIN_PATH = 'bazel-bin'
 _BUILD_PATH = 'build'
+_NUGET_PATH = '.nuget'
+_ANALYZER_PATH = os.path.join('Assets', 'Analyzers')
+_STREAMING_ASSETS_PATH = os.path.join('Assets', 'StreamingAssets')
 _INSTALL_PATH = os.path.join('Packages', 'com.github.homuler.mediapipe', 'Runtime')
 
 class Console:
@@ -42,7 +45,7 @@ class Command:
     self.verbose = command_args.args.verbose
     self.console = Console(self.verbose)
 
-  def _run_command(self, command_list, shell=False):
+  def _run_command(self, command_list, shell=True):
     self.console.v(f"Running `{' '.join(command_list)}`")
 
     if shell:
@@ -70,7 +73,7 @@ class Command:
       os.makedirs(dest, 0o755)
 
     # `shutil.copytree` fails on Windows if target file exists, so run `cp -r` instead.
-    self._run_command(['cp', '-r', f'{source}/*', dest], shell=True)
+    self._run_command(['cp', '-r', f'{source}/*', dest])
 
   def _remove(self, path):
     self.console.v(f"Removing '{path}'...")
@@ -97,8 +100,8 @@ class BuildCommand(Command):
     self.android = command_args.args.android
     self.ios= command_args.args.ios
     self.resources = command_args.args.resources
+    self.analyzers = command_args.args.analyzers
     self.opencv = command_args.args.opencv
-    self.opencv_deps = command_args.args.opencv_deps
     self.include_opencv_libs = command_args.args.include_opencv_libs
 
     self.compilation_mode = command_args.args.compilation_mode
@@ -112,10 +115,10 @@ class BuildCommand(Command):
       os.path.join(_BUILD_PATH, 'Scripts', 'Protobuf'))
     self.console.info('Built protobuf sources')
 
-    self.console.info('Downloading protobuf dlls...')
+    self.console.info('Downloading dlls...')
     self._run_command(self._build_proto_dlls_commands())
 
-    for f in glob.glob(os.path.join('.nuget', '**', 'lib', 'netstandard2.0', '*.dll'), recursive=True):
+    for f in glob.glob(os.path.join(_NUGET_PATH, '**', 'lib', 'netstandard2.0', '*.dll'), recursive=True):
       basename = os.path.basename(f)
       self._copy(f, os.path.join(_BUILD_PATH, 'Plugins', 'Protobuf', basename))
 
@@ -127,6 +130,9 @@ class BuildCommand(Command):
       self._unzip(
         os.path.join(_BAZEL_BIN_PATH, 'mediapipe_api', 'mediapipe_assets.zip'),
         os.path.join(_BUILD_PATH, 'Resources'))
+      self._unzip(
+        os.path.join(_BAZEL_BIN_PATH, 'mediapipe_api', 'mediapipe_assets.zip'),
+        _STREAMING_ASSETS_PATH)
 
       self.console.info('Built resource files')
 
@@ -166,9 +172,16 @@ class BuildCommand(Command):
 
       self.console.info('Built native libraries for iOS')
 
-    self.console.info('Installing...')
+    self.console.info('Installing built resources...')
     # _copytree fails on Windows, so run `cp -r` instead.
     self._copytree(_BUILD_PATH, _INSTALL_PATH)
+
+    # install analyzers
+    if self.analyzers:
+      self.console.info('Installing Roslyn Analyzers...')
+      for f in glob.glob(os.path.join(_NUGET_PATH, '**', 'analyzers', 'dotnet', 'cs', '*.dll'), recursive=True):
+        self._copy(f, _ANALYZER_PATH)
+
     self.console.info('Installed')
 
   def _is_windows(self):
@@ -186,8 +199,36 @@ class BuildCommand(Command):
     commands += self._build_linkopt()
 
     if self._is_windows():
-      python_bin_path = os.environ['PYTHON_BIN_PATH'].replace('\\', '//')
-      commands += ['--action_env', f'PYTHON_BIN_PATH={python_bin_path}']
+      python_bin_path_key = 'PYTHON_BIN_PATH'
+      if python_bin_path_key not in os.environ:
+        raise RuntimeError(f'`{python_bin_path_key}` is not set')
+
+      python_bin_path = os.environ[python_bin_path_key].replace('\\', '//')
+      commands += ['--action_env', f'{python_bin_path_key}="{python_bin_path}"']
+
+      # Required to compile OpenCV
+      # Without this environment variable, Visual Studio instances won't be found
+      # cf. https://github.com/bazelbuild/rules_foreign_cc/issues/793
+      program_data_key = 'ProgramData'
+      if program_data_key in os.environ:
+        commands += ['--action_env', program_data_key]
+
+      # Enable CMake to detect processors when configuring OpenCV
+      processor_architecture_key = 'PROCESSOR_ARCHITECTURE'
+      if processor_architecture_key in os.environ:
+        commands += ['--action_env', processor_architecture_key]
+
+      processor_identifier_key = 'PROCESSOR_IDENTIFIER'
+      if processor_identifier_key in os.environ:
+        commands += ['--action_env', processor_identifier_key]
+
+      processor_level_key = 'PROCESSOR_LEVEL'
+      if processor_level_key in os.environ:
+        commands += ['--action_env', processor_level_key]
+
+      processor_revision_key = 'PROCESSOR_REVISION'
+      if processor_revision_key in os.environ:
+        commands += ['--action_env', processor_revision_key]
 
     if self.verbose > 1:
       commands.append('--verbose_failures')
@@ -205,9 +246,6 @@ class BuildCommand(Command):
 
   def _build_opencv_switch(self):
     commands = [f'--@opencv//:switch={self.opencv}']
-
-    if self.opencv == 'cmake':
-      commands += [f'--@opencv//:deps={switch}' for switch in self.opencv_deps]
 
     return commands
 
@@ -256,7 +294,7 @@ class BuildCommand(Command):
       return []
 
     commands = self._build_common_commands()
-    commands += [f'--config=ios_{self.ios}', '--copt=-fembed-bitcode', '--apple_bitcode=embedded']
+    commands += [f'--config=ios_{self.ios}', '--copt=-fembed-bitcode', '--apple_bitcode=embedded', '--incompatible_run_shell_command_string=false']
     commands.append('//mediapipe_api/objc:MediaPipeUnity')
     return commands
 
@@ -274,8 +312,7 @@ class BuildCommand(Command):
     return commands
 
   def _build_proto_dlls_commands(self):
-    return ['nuget', 'install', '-o', '.nuget', '-Source', 'https://api.nuget.org/v3/index.json']
-
+    return ['nuget', 'install', '-o', _NUGET_PATH, '-Source', 'https://api.nuget.org/v3/index.json']
 
 class CleanCommand(Command):
   def __init__(self, command_args):
@@ -283,6 +320,7 @@ class CleanCommand(Command):
 
   def run(self):
     self._rmtree(_BUILD_PATH)
+    self._rmtree(_NUGET_PATH)
     self._run_command(['bazel', 'clean', '--expunge'])
 
 
@@ -295,8 +333,11 @@ class UninstallCommand(Command):
     self.ios = command_args.args.ios
     self.resources = command_args.args.resources
     self.protobuf = command_args.args.protobuf
+    self.analyzers = command_args.args.analyzers
 
   def run(self):
+    self._rmtree(_BUILD_PATH)
+
     if self.desktop:
       self.console.info('Uninstalling native libraries for Desktop...')
       for f in glob.glob(os.path.join(_INSTALL_PATH, 'Plugins', '*'), recursive=True):
@@ -326,6 +367,9 @@ class UninstallCommand(Command):
         if not f.endswith('.meta'):
           self._remove(f)
 
+      for f in glob.glob(os.path.join(_STREAMING_ASSETS_PATH, '*'), recursive=False):
+        self._remove(f)
+
     if self.protobuf:
       self.console.info('Uninstalling protobuf sources and dlls...')
 
@@ -335,6 +379,12 @@ class UninstallCommand(Command):
       for f in glob.glob(os.path.join(_INSTALL_PATH, 'Scripts', 'Protobuf', '*'), recursive=True):
         if not f.endswith('.meta'):
           self._remove(f)
+
+    if self.analyzers:
+      self.console.info('Uninstalling analyzers...')
+
+      for f in glob.glob(os.path.join(_ANALYZER_PATH, '*.dll'), recursive=True):
+        self._remove(f)
 
 
 class HelpCommand(Command):
@@ -358,9 +408,9 @@ class Argument:
     build_command_parser.add_argument('--android', choices=['arm', 'arm64'])
     build_command_parser.add_argument('--ios', choices=['arm64'])
     build_command_parser.add_argument('--resources', action=argparse.BooleanOptionalAction, default=True)
+    build_command_parser.add_argument('--analyzers', action=argparse.BooleanOptionalAction, default=False)
     build_command_parser.add_argument('--compilation_mode', '-c', choices=['fastbuild', 'opt', 'dbg'], default='opt')
     build_command_parser.add_argument('--opencv', choices=['local', 'cmake'], default='local', help='Decide to which OpenCV to link for Desktop native libraries')
-    build_command_parser.add_argument('--opencv_deps', action='append', choices=['ffmpeg'], default=[], help='OpenCV Dependencies (only used when `--opencv=cmake`)')
     build_command_parser.add_argument('--include_opencv_libs', action='store_true', help='Include OpenCV\'s native libraries for Desktop')
     build_command_parser.add_argument('--linkopt', '-l', action='append', help='Linker options')
     build_command_parser.add_argument('--verbose', '-v', action='count', default=0)
@@ -374,6 +424,7 @@ class Argument:
     uninstall_command_parser.add_argument('--ios', action=argparse.BooleanOptionalAction, default=True)
     uninstall_command_parser.add_argument('--resources', action=argparse.BooleanOptionalAction, default=True)
     uninstall_command_parser.add_argument('--protobuf', action=argparse.BooleanOptionalAction, default=True)
+    uninstall_command_parser.add_argument('--analyzers', action=argparse.BooleanOptionalAction, default=True)
     uninstall_command_parser.add_argument('--verbose', '-v', action='count', default=0)
 
     self.args = self.argument_parser.parse_args()

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 load("@rules_pkg//:pkg.bzl", "pkg_zip")
 load("//mediapipe_api:import_model.bzl", "pkg_asset")
 
@@ -57,6 +58,17 @@ cc_binary(
     linkshared = True,
     linkstatic = True,
     visibility = ["//visibility:public"],
+=======
+# Copyright (c) 2021 homuler
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+load(
+    "@com_google_mediapipe//mediapipe/framework/tool:mediapipe_graph.bzl",
+    "mediapipe_simple_subgraph",
+>>>>>>> upstream/master
 )
 
 cc_binary(
@@ -80,6 +92,7 @@ alias(
 cc_library(
     name = "calculators",
     deps = [
+<<<<<<< HEAD
         "@com_google_mediapipe//mediapipe/calculators/core:pass_through_calculator",
         "@com_google_mediapipe//mediapipe/calculators/core:packet_presence_calculator",
         "@com_google_mediapipe//mediapipe/calculators/core:flow_limiter_calculator",
@@ -101,6 +114,13 @@ cc_library(
             "@com_google_mediapipe//mediapipe/graphs/tracking:mobile_calculators",
         ],
     }),
+=======
+        "@com_google_mediapipe//mediapipe/calculators/core:concatenate_normalized_landmark_list_calculator",
+        "@com_google_mediapipe//mediapipe/calculators/core:split_landmarks_calculator",
+        "@com_google_mediapipe//mediapipe/graphs/iris_tracking/calculators:update_face_landmarks_calculator",
+        "@com_google_mediapipe//mediapipe/modules/iris_landmark:iris_landmark_left_and_right_gpu",
+    ],
+>>>>>>> upstream/master
 )
 
 cc_library(
@@ -108,7 +128,14 @@ cc_library(
     srcs = ["common.cc"],
     hdrs = ["common.h"],
     deps = [
+<<<<<<< HEAD
         "@com_google_mediapipe//mediapipe/framework/port:logging",
+=======
+        "@com_google_mediapipe//mediapipe/calculators/core:concatenate_normalized_landmark_list_calculator",
+        "@com_google_mediapipe//mediapipe/calculators/core:split_landmarks_calculator",
+        "@com_google_mediapipe//mediapipe/graphs/iris_tracking/calculators:update_face_landmarks_calculator",
+        "@com_google_mediapipe//mediapipe/modules/iris_landmark:iris_landmark_left_and_right_cpu",
+>>>>>>> upstream/master
     ],
     visibility = ["//visibility:public"],
     alwayslink = True,

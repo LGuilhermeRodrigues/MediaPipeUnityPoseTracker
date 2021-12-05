@@ -1,8 +1,8 @@
 diff --git a/mediapipe/gpu/gl_calculator_helper.cc b/mediapipe/gpu/gl_calculator_helper.cc
-index aa708e7..c146f56 100644
+index efd822a..c6da56d 100644
 --- a/mediapipe/gpu/gl_calculator_helper.cc
 +++ b/mediapipe/gpu/gl_calculator_helper.cc
-@@ -137,6 +137,10 @@ GlTexture GlCalculatorHelper::CreateDestinationTexture(int output_width,
+@@ -130,6 +130,10 @@ GlTexture GlCalculatorHelper::CreateDestinationTexture(int output_width,
    return impl_->CreateDestinationTexture(output_width, output_height, format);
  }
  
@@ -14,10 +14,10 @@ index aa708e7..c146f56 100644
    return impl_->GetGlContext();
  }
 diff --git a/mediapipe/gpu/gl_calculator_helper.h b/mediapipe/gpu/gl_calculator_helper.h
-index b5cc699..e0aa081 100644
+index d6bd718..d2dec4b 100644
 --- a/mediapipe/gpu/gl_calculator_helper.h
 +++ b/mediapipe/gpu/gl_calculator_helper.h
-@@ -144,6 +144,8 @@ class GlCalculatorHelper {
+@@ -134,6 +134,8 @@ class GlCalculatorHelper {
        int output_width, int output_height,
        GpuBufferFormat format = GpuBufferFormat::kBGRA32);
  
@@ -27,7 +27,7 @@ index b5cc699..e0aa081 100644
    GLuint framebuffer() const;
  
 diff --git a/mediapipe/gpu/gl_calculator_helper_impl.h b/mediapipe/gpu/gl_calculator_helper_impl.h
-index 4381111..cdabc45 100644
+index 40b53f5..3214043 100644
 --- a/mediapipe/gpu/gl_calculator_helper_impl.h
 +++ b/mediapipe/gpu/gl_calculator_helper_impl.h
 @@ -49,6 +49,7 @@ class GlCalculatorHelperImpl {
@@ -39,10 +39,10 @@ index 4381111..cdabc45 100644
    GLuint framebuffer() const { return framebuffer_; }
    void BindFramebuffer(const GlTexture& dst);
 diff --git a/mediapipe/gpu/gl_calculator_helper_impl_common.cc b/mediapipe/gpu/gl_calculator_helper_impl_common.cc
-index 2e4ab10..6e5e073 100644
+index fef2550..67f7b43 100644
 --- a/mediapipe/gpu/gl_calculator_helper_impl_common.cc
 +++ b/mediapipe/gpu/gl_calculator_helper_impl_common.cc
-@@ -195,14 +195,18 @@ GlTextureBufferSharedPtr GlCalculatorHelperImpl::MakeGlTextureBuffer(
+@@ -146,14 +146,18 @@ std::unique_ptr<GpuBuffer> GlTexture::GetFrame<GpuBuffer>() const {
  
  GlTexture GlCalculatorHelperImpl::CreateDestinationTexture(
      int width, int height, GpuBufferFormat format) {
@@ -59,14 +59,14 @@ index 2e4ab10..6e5e073 100644
  
 -  GpuBuffer buffer =
 -      gpu_resources_.gpu_buffer_pool().GetBuffer(width, height, format);
--  GlTexture texture = MapGpuBuffer(buffer, 0);
+-  GlTexture texture = MapGpuBuffer(buffer, 0, false);
 -
-+  GlTexture texture = MapGpuBuffer(gpu_buffer, 0);
++  GlTexture texture = MapGpuBuffer(gpu_buffer, 0, false);
    return texture;
  }
  
 diff --git a/mediapipe/gpu/gl_scaler_calculator.cc b/mediapipe/gpu/gl_scaler_calculator.cc
-index 6191876..19a8cf8 100644
+index fa06c88..0d0bd0c 100644
 --- a/mediapipe/gpu/gl_scaler_calculator.cc
 +++ b/mediapipe/gpu/gl_scaler_calculator.cc
 @@ -12,6 +12,8 @@
@@ -78,7 +78,7 @@ index 6191876..19a8cf8 100644
  #include "mediapipe/framework/calculator_framework.h"
  #include "mediapipe/framework/formats/image.h"
  #include "mediapipe/framework/port/ret_check.h"
-@@ -61,6 +63,7 @@ using Image = mediapipe::Image;
+@@ -68,6 +70,7 @@ using Image = mediapipe::Image;
  //   existing calculator options, depending on field merge_fields.
  //   OUTPUT_DIMENSIONS: the output width and height in pixels.
  //   ROTATION: the counterclockwise rotation angle in degrees.
@@ -86,7 +86,7 @@ index 6191876..19a8cf8 100644
  // These can also be specified as options.
  // To enable horizontal or vertical flip, specify them in options.
  // The flipping is applied after rotation.
-@@ -85,6 +88,7 @@ class GlScalerCalculator : public CalculatorBase {
+@@ -92,6 +95,7 @@ class GlScalerCalculator : public CalculatorBase {
  
   private:
    GlCalculatorHelper helper_;
@@ -94,17 +94,17 @@ index 6191876..19a8cf8 100644
    int dst_width_ = 0;
    int dst_height_ = 0;
    float dst_scale_ = -1.f;
-@@ -121,6 +125,9 @@ absl::Status GlScalerCalculator::GetContract(CalculatorContract* cc) {
+@@ -128,6 +132,9 @@ absl::Status GlScalerCalculator::GetContract(CalculatorContract* cc) {
    }
    MP_RETURN_IF_ERROR(GlCalculatorHelper::UpdateContract(cc));
  
 +  if (cc->InputSidePackets().HasTag("DESTINATION")) {
 +    cc->InputSidePackets().Tag("DESTINATION").Set<GpuBuffer>();
 +  }
-   if (cc->InputSidePackets().HasTag("OPTIONS")) {
-     cc->InputSidePackets().Tag("OPTIONS").Set<GlScalerCalculatorOptions>();
+   if (cc->InputSidePackets().HasTag(kOptionsTag)) {
+     cc->InputSidePackets().Tag(kOptionsTag).Set<GlScalerCalculatorOptions>();
    }
-@@ -187,6 +194,11 @@ absl::Status GlScalerCalculator::Open(CalculatorContext* cc) {
+@@ -194,6 +201,11 @@ absl::Status GlScalerCalculator::Open(CalculatorContext* cc) {
      dst_width_ = dimensions[0];
      dst_height_ = dimensions[1];
    }
@@ -113,19 +113,19 @@ index 6191876..19a8cf8 100644
 +    dst_width_ = dst_buffer_.width();
 +    dst_height_ = dst_buffer_.height();
 +  }
-   if (cc->InputSidePackets().HasTag("ROTATION")) {
-     rotation_ccw = cc->InputSidePackets().Tag("ROTATION").Get<int>();
+   if (cc->InputSidePackets().HasTag(kRotationTag)) {
+     rotation_ccw = cc->InputSidePackets().Tag(kRotationTag).Get<int>();
    }
-@@ -197,7 +209,7 @@ absl::Status GlScalerCalculator::Open(CalculatorContext* cc) {
+@@ -204,7 +216,7 @@ absl::Status GlScalerCalculator::Open(CalculatorContext* cc) {
  }
  
  absl::Status GlScalerCalculator::Process(CalculatorContext* cc) {
--  if (cc->Inputs().HasTag("OUTPUT_DIMENSIONS")) {
-+  if (!dst_buffer_ && cc->Inputs().HasTag("OUTPUT_DIMENSIONS")) {
-     if (cc->Inputs().Tag("OUTPUT_DIMENSIONS").IsEmpty()) {
+-  if (cc->Inputs().HasTag(kOutputDimensionsTag)) {
++  if (!dst_buffer_ && cc->Inputs().HasTag(kOutputDimensionsTag)) {
+     if (cc->Inputs().Tag(kOutputDimensionsTag).IsEmpty()) {
        // OUTPUT_DIMENSIONS input stream is specified, but value is missing.
        return absl::OkStatus();
-@@ -279,9 +291,18 @@ absl::Status GlScalerCalculator::Process(CalculatorContext* cc) {
+@@ -286,9 +298,18 @@ absl::Status GlScalerCalculator::Process(CalculatorContext* cc) {
                MakePacket<float>(left_right_padding).At(cc->InputTimestamp()));
      }
  
@@ -147,3 +147,126 @@ index 6191876..19a8cf8 100644
      helper_.BindFramebuffer(dst);
      glActiveTexture(GL_TEXTURE1);
      glBindTexture(src1.target(), src1.name());
+diff --git a/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_cpu.pbtxt b/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_cpu.pbtxt
+index e1a25e9..1d99672 100644
+--- a/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_cpu.pbtxt
++++ b/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_cpu.pbtxt
+@@ -8,6 +8,11 @@ input_stream: "IMAGE:input_video"
+ # Face-related pose landmarks. (NormalizedLandmarkList)
+ input_stream: "FACE_LANDMARKS_FROM_POSE:face_landmarks_from_pose"
+ 
++# Whether to run the face landmark model with attention on lips and eyes to
++# provide more accuracy, and additionally output iris landmarks. If unspecified,
++# functions as set to false. (bool)
++input_side_packet: "REFINE_LANDMARKS:refine_landmarks"
++
+ # Face landmarks. (NormalizedLandmarkList)
+ output_stream: "FACE_LANDMARKS:face_landmarks"
+ 
+@@ -72,5 +77,6 @@ node {
+   calculator: "FaceLandmarkCpu"
+   input_stream: "IMAGE:input_video"
+   input_stream: "ROI:face_tracking_roi"
++  input_side_packet: "WITH_ATTENTION:refine_landmarks"
+   output_stream: "LANDMARKS:face_landmarks"
+ }
+diff --git a/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_gpu.pbtxt b/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_gpu.pbtxt
+index 872526b..24a9854 100644
+--- a/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_gpu.pbtxt
++++ b/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_gpu.pbtxt
+@@ -8,6 +8,11 @@ input_stream: "IMAGE:input_video"
+ # Face-related pose landmarks. (NormalizedLandmarkList)
+ input_stream: "FACE_LANDMARKS_FROM_POSE:face_landmarks_from_pose"
+ 
++# Whether to run the face landmark model with attention on lips and eyes to
++# provide more accuracy, and additionally output iris landmarks. If unspecified,
++# functions as set to false. (bool)
++input_side_packet: "REFINE_LANDMARKS:refine_landmarks"
++
+ # Face landmarks. (NormalizedLandmarkList)
+ output_stream: "FACE_LANDMARKS:face_landmarks"
+ 
+@@ -72,5 +77,6 @@ node {
+   calculator: "FaceLandmarkGpu"
+   input_stream: "IMAGE:input_video"
+   input_stream: "ROI:face_tracking_roi"
++  input_side_packet: "WITH_ATTENTION:refine_landmarks"
+   output_stream: "LANDMARKS:face_landmarks"
+ }
+diff --git a/mediapipe/modules/holistic_landmark/holistic_landmark_cpu.pbtxt b/mediapipe/modules/holistic_landmark/holistic_landmark_cpu.pbtxt
+index 878e230..4490895 100644
+--- a/mediapipe/modules/holistic_landmark/holistic_landmark_cpu.pbtxt
++++ b/mediapipe/modules/holistic_landmark/holistic_landmark_cpu.pbtxt
+@@ -35,6 +35,7 @@
+ #     input_side_packet: "SMOOTH_LANDMARKS:smooth_landmarks"
+ #     input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
+ #     input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
++#     input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
+ #     input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
+ #     output_stream: "POSE_LANDMARKS:pose_landmarks"
+ #     output_stream: "FACE_LANDMARKS:face_landmarks"
+@@ -70,6 +71,11 @@ input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
+ # jitter. If unspecified, functions as set to true. (bool)
+ input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
+ 
++# Whether to run the face landmark model with attention on lips and eyes to
++# provide more accuracy, and additionally output iris landmarks. If unspecified,
++# functions as set to false. (bool)
++input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
++
+ # Whether landmarks on the previous image should be used to help localize
+ # landmarks on the current image. (bool)
+ input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
+@@ -135,5 +141,6 @@ node {
+   calculator: "FaceLandmarksFromPoseCpu"
+   input_stream: "IMAGE:image"
+   input_stream: "FACE_LANDMARKS_FROM_POSE:face_landmarks_from_pose"
++  input_side_packet: "REFINE_LANDMARKS:refine_face_landmarks"
+   output_stream: "FACE_LANDMARKS:face_landmarks"
+ }
+diff --git a/mediapipe/modules/holistic_landmark/holistic_landmark_gpu.pbtxt b/mediapipe/modules/holistic_landmark/holistic_landmark_gpu.pbtxt
+index dc2a7b9..2ae20fe 100644
+--- a/mediapipe/modules/holistic_landmark/holistic_landmark_gpu.pbtxt
++++ b/mediapipe/modules/holistic_landmark/holistic_landmark_gpu.pbtxt
+@@ -35,6 +35,7 @@
+ #     input_side_packet: "SMOOTH_LANDMARKS:smooth_landmarks"
+ #     input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
+ #     input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
++#     input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
+ #     input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
+ #     output_stream: "POSE_LANDMARKS:pose_landmarks"
+ #     output_stream: "FACE_LANDMARKS:face_landmarks"
+@@ -70,6 +71,11 @@ input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
+ # jitter. If unspecified, functions as set to true. (bool)
+ input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
+ 
++# Whether to run the face landmark model with attention on lips and eyes to
++# provide more accuracy, and additionally output iris landmarks. If unspecified,
++# functions as set to false. (bool)
++input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
++
+ # Whether landmarks on the previous image should be used to help localize
+ # landmarks on the current image. (bool)
+ input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
+@@ -135,5 +141,6 @@ node {
+   calculator: "FaceLandmarksFromPoseGpu"
+   input_stream: "IMAGE:image"
+   input_stream: "FACE_LANDMARKS_FROM_POSE:face_landmarks_from_pose"
++  input_side_packet: "REFINE_LANDMARKS:refine_face_landmarks"
+   output_stream: "FACE_LANDMARKS:face_landmarks"
+ }
+diff --git a/mediapipe/modules/objectron/objectron_gpu.pbtxt b/mediapipe/modules/objectron/objectron_gpu.pbtxt
+index 7ef2b67..83856d5 100644
+--- a/mediapipe/modules/objectron/objectron_gpu.pbtxt
++++ b/mediapipe/modules/objectron/objectron_gpu.pbtxt
+@@ -14,6 +14,10 @@ input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
+ 
+ # Collection of detected 3D objects, represented as a FrameAnnotation.
+ output_stream: "FRAME_ANNOTATION:detected_objects"
++# Collection of box landmarks. (NormalizedLandmarkList)
++output_stream: "MULTI_LANDMARKS:multi_box_landmarks"
++# Crop rectangles derived from bounding box landmarks.
++output_stream: "NORM_RECTS:box_rects"
+ 
+ # When the optional input side packet "use_prev_landmarks" is either absent or
+ # set to true, uses the landmarks on the previous image to help localize
