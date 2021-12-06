@@ -4,15 +4,27 @@ using UnityEngine;
 
 public class AngleText : MonoBehaviour
 {
-  private PoseManager _poseManager;
 
-  private int currentPose = 0;
-  private int lastPose = 0;
-  private int counter = 0;
+  private enum Pose
+  {
+    Anatomical,
+    ArmCoronal,
+    ArmSagital,
+    Other
+  };
   
-  public UnicodeInlineText angleText;
-  public UnicodeInlineText counterText;
-    // Start is called before the first frame update
+  private PoseManager _poseManager;
+  private Pose currentPose = Pose.Other;
+  private Pose lastPose = Pose.Other;
+  private int coronalCounter = 0;
+  private int sagittalCounter = 0;
+  private int transverseCounter = 0;
+  public UnicodeInlineText upAngleText;
+  public UnicodeInlineText frontAngleText;
+  public UnicodeInlineText coronalCounterText;
+  public UnicodeInlineText sagittalCounterText;
+  public UnicodeInlineText transverseCounterText;
+
     void Start()
     {
       _poseManager=GameObject.Find("PoseManager").GetComponent<PoseManager>();
@@ -25,31 +37,59 @@ public class AngleText : MonoBehaviour
       {
         return;
       }
-      var _currentAngle = _poseManager.get3DAngle(
+      var currentUpAngle = _poseManager.get3DAngle(
         PoseManager.pose.L_HIP,
         PoseManager.pose.L_SHOULDER,
         PoseManager.pose.L_ELBOW);
-      angleText.text = _currentAngle.ToString("#.");
-      if (_currentAngle<40)
+      upAngleText.text = currentUpAngle.ToString("#.");
+      
+      var currentFrontAngle = _poseManager.get3DAngle(
+        PoseManager.pose.R_SHOULDER,
+        PoseManager.pose.L_SHOULDER,
+        PoseManager.pose.L_ELBOW);
+      frontAngleText.text = currentFrontAngle.ToString("#.");
+      
+      if (currentUpAngle<40)
       {
-        currentPose = 0;
-      } else if (_currentAngle>80)
+        currentPose = Pose.Anatomical;
+      } else if (currentUpAngle>70)
       {
-        currentPose = 1;
+        if (currentFrontAngle>160)
+        {
+          currentPose = Pose.ArmCoronal;
+        } else if (currentFrontAngle < 120)
+        {
+          currentPose = Pose.ArmSagital;
+        }
+        else
+        {
+          currentPose = Pose.Other;
+        }
       }
       else
       {
-        currentPose = 2;
+        currentPose = Pose.Other;
       }
-      if (lastPose == 0 && currentPose == 1)
+      
+      if (lastPose == Pose.Anatomical && currentPose == Pose.ArmCoronal)
       {
-        counter=1+counter;
+        coronalCounter++;
       }
-
-      if (currentPose!=2)
+      coronalCounterText.text = coronalCounter.ToString();
+      if (lastPose == Pose.Anatomical && currentPose == Pose.ArmSagital)
+      {
+        sagittalCounter++;
+      }
+      sagittalCounterText.text = sagittalCounter.ToString();
+      if (lastPose == Pose.ArmCoronal && currentPose == Pose.ArmSagital)
+      {
+        transverseCounter++;
+      }
+      transverseCounterText.text = transverseCounter.ToString();
+      
+      if (currentPose!=Pose.Other)
       {
         lastPose = currentPose;
       }
-      counterText.text = counter.ToString();
     }
 }
