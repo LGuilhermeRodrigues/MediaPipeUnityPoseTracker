@@ -40,16 +40,16 @@ public class AngleText : MonoBehaviour
       var currentUpAngle = _poseManager.get3DAngle(
         PoseManager.pose.L_HIP,
         PoseManager.pose.L_SHOULDER,
-        PoseManager.pose.L_ELBOW);
+        PoseManager.pose.L_WRIST);
       upAngleText.text = currentUpAngle.ToString("#.");
       
       var currentFrontAngle = _poseManager.get3DAngle(
         PoseManager.pose.R_SHOULDER,
         PoseManager.pose.L_SHOULDER,
-        PoseManager.pose.L_ELBOW);
+        PoseManager.pose.L_WRIST);
       frontAngleText.text = currentFrontAngle.ToString("#.");
       
-      if (currentUpAngle<40)
+      if (currentUpAngle<30)
       {
         currentPose = Pose.Anatomical;
       } else if (currentUpAngle>70)
@@ -75,17 +75,17 @@ public class AngleText : MonoBehaviour
       {
         coronalCounter++;
       }
-      coronalCounterText.text = coronalCounter.ToString();
+      coronalCounterText.text = "Coronal: "+coronalCounter.ToString();
       if (lastPose == Pose.Anatomical && currentPose == Pose.ArmSagital)
       {
         sagittalCounter++;
       }
-      sagittalCounterText.text = sagittalCounter.ToString();
+      sagittalCounterText.text = "Sagittal: "+sagittalCounter.ToString();
       if (lastPose == Pose.ArmCoronal && currentPose == Pose.ArmSagital)
       {
         transverseCounter++;
       }
-      transverseCounterText.text = transverseCounter.ToString();
+      transverseCounterText.text = "Transverse: "+transverseCounter.ToString();
       
       if (currentPose!=Pose.Other)
       {

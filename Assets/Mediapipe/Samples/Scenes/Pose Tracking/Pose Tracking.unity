@@ -1419,7 +1419,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Coronal: 00'
+  m_Text: 'Coronal: 0'
 --- !u!222 &1061673718
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2913,7 +2913,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Sagittal: 00'
+  m_Text: 'Sagittal: 0'
 --- !u!222 &1943116683
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3277,7 +3277,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Transverse: 00'
+  m_Text: 'Transverse: 0'
 --- !u!222 &2128381194
 CanvasRenderer:
   m_ObjectHideFlags: 0
