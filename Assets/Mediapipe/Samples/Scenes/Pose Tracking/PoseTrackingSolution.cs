@@ -75,8 +75,12 @@ namespace Mediapipe.Unity.PoseTracking
 
     private IEnumerator Run()
     {
-      _poseManager = GameObject.Find("PoseManager").GetComponent<PoseManager>();
-
+      var poseObject = GameObject.Find("PoseManager");
+      if (poseObject)
+      {
+        _poseManager = poseObject.GetComponent<PoseManager>();
+      }
+      
       var graphInitRequest = _graphRunner.WaitForInit();
       var imageSource = ImageSourceProvider.ImageSource;
 
@@ -151,7 +155,10 @@ namespace Mediapipe.Unity.PoseTracking
           _roiFromLandmarksAnnotationController.DrawNow(value.roiFromLandmarks);
           if (value.poseWorldLandmarks!=null)
           {
-            _poseManager.SetPose(value.poseWorldLandmarks.Landmark);
+            if (_poseManager)
+            {
+              _poseManager.SetPose(value.poseWorldLandmarks.Landmark);
+            }
           }
         }
 
