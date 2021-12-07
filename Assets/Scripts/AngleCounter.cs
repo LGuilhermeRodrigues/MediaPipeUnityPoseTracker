@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AngleText : MonoBehaviour
+public class AngleCounter : MonoBehaviour
 {
 
   private enum Pose
