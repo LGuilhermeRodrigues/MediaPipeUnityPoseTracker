@@ -98,7 +98,7 @@ public class PoseManager : MonoBehaviour
             return new Vector3(
                 landmarks[(int) idx_point].X,
                 landmarks[(int) idx_point].Y,
-                -landmarks[(int) idx_point].Z);
+                landmarks[(int) idx_point].Z);
         }
         else
         {
