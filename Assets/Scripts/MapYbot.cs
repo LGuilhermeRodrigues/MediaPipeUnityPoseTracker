@@ -34,7 +34,7 @@ public class MapYbot : MonoBehaviour
           PoseManager.pose.R_SHOULDER,
           PoseManager.pose.L_SHOULDER,
           PoseManager.pose.L_ELBOW);
-        shoulderRight.localEulerAngles = shoulderRightBase + new Vector3(0, currentFrontAngle, currentUpAngle);
+        shoulderLeft.localEulerAngles = shoulderLeftBase + new Vector3(0, -currentFrontAngle, -currentUpAngle);
         currentUpAngle = _poseManager.get3DAngle(
           PoseManager.pose.R_HIP,
           PoseManager.pose.R_SHOULDER,
@@ -43,7 +43,7 @@ public class MapYbot : MonoBehaviour
           PoseManager.pose.L_SHOULDER,
           PoseManager.pose.R_SHOULDER,
           PoseManager.pose.R_ELBOW);
-        shoulderLeft.localEulerAngles = shoulderLeftBase + new Vector3(0, -currentFrontAngle, -currentUpAngle);
+        shoulderRight.localEulerAngles = shoulderRightBase + new Vector3(0, currentFrontAngle, currentUpAngle);
         currentUpAngle = _poseManager.get3DAngle(
           PoseManager.pose.L_SHOULDER,
           PoseManager.pose.L_ELBOW,
@@ -66,7 +66,7 @@ public class MapYbot : MonoBehaviour
         vector2 = wristPoint - elbowPoint;
         var normalForearm = Vector3.Cross(vector1,vector2);
         currentFrontAngle = Vector3.Angle(normalHip, normalForearm);
-        elbowRight.localEulerAngles = new Vector3(0,-180,0) + new Vector3(-currentFrontAngle, currentUpAngle, 0);
+        elbowLeft.localEulerAngles = new Vector3(0,180,0) + new Vector3(-currentFrontAngle, -currentUpAngle, 0);
         currentUpAngle = _poseManager.get3DAngle(
           PoseManager.pose.R_SHOULDER,
           PoseManager.pose.R_ELBOW,
@@ -82,7 +82,7 @@ public class MapYbot : MonoBehaviour
         vector2 = wristPoint - elbowPoint;
         normalForearm = Vector3.Cross(vector1,vector2);
         currentFrontAngle = Vector3.Angle(normalHip, normalForearm);
-        elbowLeft.localEulerAngles = new Vector3(0,180,0) + new Vector3(-currentFrontAngle, -currentUpAngle, 0);
+        elbowRight.localEulerAngles = new Vector3(0,-180,0) + new Vector3(-currentFrontAngle, currentUpAngle, 0);
       }
     }
 }
