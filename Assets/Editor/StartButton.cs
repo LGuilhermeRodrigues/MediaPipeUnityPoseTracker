@@ -23,7 +23,7 @@ public class StartButton : MonoBehaviour
   [MenuItem("Run/Return %h")]
   public static void ReturnToEditingScene()
   {
-    EditorSceneManager.OpenScene("Assets/Mediapipe/Samples/Scenes/Pose Tracking/Pose Tracking.unity");
+    EditorSceneManager.OpenScene("Assets/Scenes/AvatarView.unity");
   }
   
 }

@@ -75,6 +75,11 @@ public class AngleCounter : MonoBehaviour
       {
         coronalCounter++;
       }
+
+      if (coronalCounterText==null)
+      {
+        return;
+      }
       coronalCounterText.text = "Coronal: "+coronalCounter.ToString();
       if (lastPose == Pose.Anatomical && currentPose == Pose.ArmSagital)
       {
