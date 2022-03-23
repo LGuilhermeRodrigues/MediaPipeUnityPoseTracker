@@ -14,6 +14,10 @@ using UnityEngine.Experimental.Rendering;
 
 namespace Mediapipe.Unity
 {
+#pragma warning disable IDE0065
+  using Color = UnityEngine.Color;
+#pragma warning restore IDE0065
+
   public class TextureFrame
   {
     public class ReleaseEvent : UnityEvent<TextureFrame> { }
@@ -347,7 +351,7 @@ namespace Mediapipe.Unity
         _textureBuffer = new Texture2D(width, height, textureFormat, false);
       }
 
-      var tmpRenderTexture = new RenderTexture(texture.width, texture.height, 32);
+      var tmpRenderTexture = RenderTexture.GetTemporary(texture.width, texture.height, 32);
       var currentRenderTexture = RenderTexture.active;
       RenderTexture.active = tmpRenderTexture;
 
@@ -357,8 +361,7 @@ namespace Mediapipe.Unity
       _textureBuffer.ReadPixels(rect, 0, 0);
       _textureBuffer.Apply();
       RenderTexture.active = currentRenderTexture;
-
-      tmpRenderTexture.Release();
+      RenderTexture.ReleaseTemporary(tmpRenderTexture);
 
       return _textureBuffer;
     }

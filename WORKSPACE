@@ -1,15 +1,5 @@
 workspace(name = "mediapipe_api")
 
-# This file is almost the same as mediapipe's WORKSPACE file, but there exist some differences between the two.
-#
-# - com_google_mediapipe dependency
-# - @//third_party -> @com_google_mediapipe//third_party
-#    - exception: opencv_linux, opencv_windows, ffmpeg_linux, ffmpeg_macos
-# - android_opencv sha256 is added
-# - unity dependency
-# - rules_foreign_cc's version
-# - rules_pkg
-
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
@@ -28,23 +18,38 @@ bazel_skylib_workspace()
 
 load("@bazel_skylib//lib:versions.bzl", "versions")
 
-versions.check(minimum_bazel_version = "3.7.2")
+versions.check(minimum_bazel_version = "4.2.1")
 
 http_archive(
     name = "rules_pkg",
-    sha256 = "6b5969a7acd7b60c02f816773b06fcf32fbe8ba0c7919ccdc2df4f8fb923804a",
-    url = "https://github.com/bazelbuild/rules_pkg/releases/download/0.3.0/rules_pkg-0.3.0.tar.gz",
+    sha256 = "62eeb544ff1ef41d786e329e1536c1d541bb9bcad27ae984d57f18f314018e66",
+    url = "https://github.com/bazelbuild/rules_pkg/releases/download/0.6.0/rules_pkg-0.6.0.tar.gz",
 )
 
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
 rules_pkg_dependencies()
 
-new_local_repository(
-    name = "unity",
-    build_file = "@//third_party:unity.BUILD",
-    path = "/path/to/unity/2020.3.23f1",
+http_archive(
+    name = "emsdk",
+    sha256 = "8978a12172028542c1c4007745e5421cb018842ebf77dfc0f8555d1ae9b09234",
+    strip_prefix = "emsdk-8e7b714a0b2137caca4a212c003f4eb9b9ba9667/bazel",
+    url = "https://github.com/emscripten-core/emsdk/archive/8e7b714a0b2137caca4a212c003f4eb9b9ba9667.tar.gz",
+    patch_args = [
+        "-p1",
+    ],
+    patches = [
+        "@//third_party:emsdk_bitcode_support.diff",
+    ],
 )
+
+load("@emsdk//:deps.bzl", emsdk_deps = "deps")
+
+emsdk_deps()
+
+load("@emsdk//:emscripten_deps.bzl", emsdk_emscripten_deps = "emscripten_deps")
+
+emsdk_emscripten_deps(emscripten_version = "2.0.22")
 
 # mediapipe
 http_archive(
@@ -58,10 +63,11 @@ http_archive(
         "@//third_party:mediapipe_visibility.diff",
         "@//third_party:mediapipe_model_path.diff",
         "@//third_party:mediapipe_extension.diff",
+        "@//third_party:mediapipe_emscripten_patch.diff",
     ],
-    sha256 = "d20c4c7a957c70be6018c704a5cea3c61314df22e4f88b452c19472f0227a48f",
-    strip_prefix = "mediapipe-0.8.8",
-    urls = ["https://github.com/google/mediapipe/archive/v0.8.8.tar.gz"],
+    sha256 = "54ce6da9f167d34fe53f928c804b3bc1fd1dd8fe2b32ca4bf0b63325d34680ac",
+    strip_prefix = "mediapipe-0.8.9",
+    urls = ["https://github.com/google/mediapipe/archive/v0.8.9.tar.gz"],
 )
 
 # ABSL cpp library lts_2021_03_24, patch 2.
@@ -88,10 +94,19 @@ http_archive(
 )
 
 http_archive(
+    name = "bazel_rules_dict",
+    strip_prefix = "bazel_rules_dict-0.1.1",
+    sha256 = "00adce0dc43d7ef39dcb7f59f8cc5644cde02766bb193f342ecff13d70f60b07",
+    urls = [
+        "https://github.com/homuler/bazel_rules_dict/archive/refs/tags/v0.1.1.tar.gz",
+    ],
+)
+
+http_archive(
     name = "rules_foreign_cc",
-    sha256 = "30c970bfaeda3485100c62b13093da2be2c70ed99ec8d30f4fac6dd37cb25f34",
-    strip_prefix = "rules_foreign_cc-0.6.0",
-    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/0.6.0.zip",
+    sha256 = "47f94195f144952c5a47245363d4a27b0e7ef3037a58ecf13aca8b5dbe3c2609",
+    strip_prefix = "rules_foreign_cc-feat-cache_entries_target",
+    url = "https://github.com/homuler/rules_foreign_cc/archive/feat/cache_entries_target.zip",
 )
 
 load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
@@ -165,17 +180,26 @@ http_archive(
     urls = ["https://chromium.googlesource.com/libyuv/libyuv/+archive/2525698acba9bf9b701ba6b4d9584291a1f62257.tar.gz"],
 )
 
+# Note: protobuf-javalite is no longer released as a separate download, it's included in the main Java download.
+# ...but the Java download is currently broken, so we use the "source" download.
+http_archive(
+    name = "com_google_protobuf_javalite",
+    sha256 = "87407cd28e7a9c95d9f61a098a53cf031109d451a7763e7dd1253abf8b4df422",
+    strip_prefix = "protobuf-3.19.1",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.19.1.tar.gz"],
+)
+
 http_archive(
     name = "com_google_protobuf",
     patch_args = [
         "-p1",
     ],
     patches = [
-        "@//third_party:com_google_protobuf_fixes.diff",
+        "@com_google_mediapipe//third_party:com_google_protobuf_fixes.diff",
     ],
-    sha256 = "65e020a42bdab44a66664d34421995829e9e79c60e5adaa08282fd14ca552f57",
-    strip_prefix = "protobuf-3.15.6",
-    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.15.6.tar.gz"],
+    sha256 = "87407cd28e7a9c95d9f61a098a53cf031109d451a7763e7dd1253abf8b4df422",
+    strip_prefix = "protobuf-3.19.1",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.19.1.tar.gz"],
 )
 
 http_archive(
@@ -192,17 +216,18 @@ http_archive(
     urls = ["https://github.com/pybind/pybind11_bazel/archive/203508e14aab7309892a1c5f7dd05debda22d9a5.zip"],
 )
 
+# Point to the commit that deprecates the usage of Eigen::MappedSparseMatrix.
 http_archive(
     name = "pybind11",
     build_file = "@pybind11_bazel//:pybind11.BUILD",
-    sha256 = "616d1c42e4cf14fa27b2a4ff759d7d7b33006fdc5ad8fd603bb2c22622f27020",
-    strip_prefix = "pybind11-2.7.1",
+    sha256 = "b971842fab1b5b8f3815a2302331782b7d137fef0e06502422bc4bc360f4956c",
+    strip_prefix = "pybind11-70a58c577eaf067748c2ec31bfd0b0a614cffba6",
     urls = [
-        "https://storage.googleapis.com/mirror.tensorflow.org/github.com/pybind/pybind11/archive/v2.7.1.tar.gz",
-        "https://github.com/pybind/pybind11/archive/v2.7.1.tar.gz",
+        "https://github.com/pybind/pybind11/archive/70a58c577eaf067748c2ec31bfd0b0a614cffba6.zip",
     ],
 )
 
+# Point to the commit that deprecates the usage of Eigen::MappedSparseMatrix.
 http_archive(
     name = "ceres_solver",
     patch_args = [
@@ -211,9 +236,9 @@ http_archive(
     patches = [
         "@com_google_mediapipe//third_party:ceres_solver_compatibility_fixes.diff",
     ],
-    sha256 = "db12d37b4cebb26353ae5b7746c7985e00877baa8e7b12dc4d3a1512252fff3b",
-    strip_prefix = "ceres-solver-2.0.0",
-    url = "https://github.com/ceres-solver/ceres-solver/archive/2.0.0.zip",
+    sha256 = "8b7b16ceb363420e0fd499576daf73fa338adb0b1449f58bea7862766baa1ac7",
+    strip_prefix = "ceres-solver-123fba61cf2611a3c8bddc9d91416db26b10b558",
+    url = "https://github.com/ceres-solver/ceres-solver/archive/123fba61cf2611a3c8bddc9d91416db26b10b558.zip",
 )
 
 http_archive(
@@ -260,6 +285,12 @@ new_local_repository(
     path = "C:\\opencv\\build",
 )
 
+new_local_repository(
+    name = "wasm_opencv",
+    build_file = "@//third_party:opencv_wasm.BUILD",
+    path = "/usr",
+)
+
 http_archive(
     name = "android_opencv",
     build_file = "@com_google_mediapipe//third_party:opencv_android.BUILD",
@@ -295,15 +326,11 @@ http_archive(
     urls = ["https://github.com/nothings/stb/archive/b42009b3b9d4ca35bc703f5310eedc74f584be58.tar.gz"],
 )
 
-# You may run setup_android.sh to install Android SDK and NDK.
-android_ndk_repository(
-    name = "androidndk",
-    api_level = 21,
-)
+load("//third_party:android_configure.bzl", "android_configure")
+android_configure(name = "local_config_android")
 
-android_sdk_repository(
-    name = "androidsdk",
-)
+load("@local_config_android//:android_configure.bzl", "android_workspace")
+android_workspace()
 
 # iOS basic build deps.
 
@@ -317,8 +344,8 @@ http_archive(
         "@com_google_mediapipe//third_party:build_bazel_rules_apple_bypass_test_runner_check.diff",
         "@//third_party:build_bazel_rules_apple_validation.diff",
     ],
-    sha256 = "55f4dc1c9bf21bb87442665f4618cff1f1343537a2bd89252078b987dcd9c382",
-    url = "https://github.com/bazelbuild/rules_apple/releases/download/0.20.0/rules_apple.0.20.0.tar.gz",
+    sha256 = "77e8bf6fda706f420a55874ae6ee4df0c9d95da6c7838228b26910fc82eea5a2",
+    url = "https://github.com/bazelbuild/rules_apple/releases/download/0.32.0/rules_apple.0.32.0.tar.gz",
 )
 
 load(
@@ -337,10 +364,9 @@ swift_rules_dependencies()
 
 http_archive(
     name = "build_bazel_apple_support",
-    sha256 = "122ebf7fe7d1c8e938af6aeaee0efe788a3a2449ece5a8d6a428cb18d6f88033",
+    sha256 = "741366f79d900c11e11d8efd6cc6c66a31bfb2451178b58e0b5edc6f1db17b35",
     urls = [
-        "https://storage.googleapis.com/mirror.tensorflow.org/github.com/bazelbuild/apple_support/releases/download/0.7.1/apple_support.0.7.1.tar.gz",
-        "https://github.com/bazelbuild/apple_support/releases/download/0.7.1/apple_support.0.7.1.tar.gz",
+        "https://github.com/bazelbuild/apple_support/releases/download/0.10.0/apple_support.0.10.0.tar.gz",
     ],
 )
 
@@ -361,61 +387,6 @@ http_archive(
     url = "https://github.com/google/google-toolbox-for-mac/archive/v2.2.1.zip",
 )
 
-# Maven dependencies.
-
-RULES_JVM_EXTERNAL_TAG = "4.0"
-
-RULES_JVM_EXTERNAL_SHA = "31701ad93dbfe544d597dbe62c9a1fdd76d81d8a9150c2bf1ecf928ecdf97169"
-
-http_archive(
-    name = "rules_jvm_external",
-    sha256 = RULES_JVM_EXTERNAL_SHA,
-    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
-)
-
-load("@rules_jvm_external//:defs.bzl", "maven_install")
-
-# Important: there can only be one maven_install rule. Add new maven deps here.
-maven_install(
-    artifacts = [
-        "androidx.concurrent:concurrent-futures:1.0.0-alpha03",
-        "androidx.lifecycle:lifecycle-common:2.3.1",
-        "androidx.activity:activity:1.2.2",
-        "androidx.exifinterface:exifinterface:1.3.3",
-        "androidx.fragment:fragment:1.3.4",
-        "androidx.annotation:annotation:aar:1.1.0",
-        "androidx.appcompat:appcompat:aar:1.1.0-rc01",
-        "androidx.camera:camera-core:1.0.0-beta10",
-        "androidx.camera:camera-camera2:1.0.0-beta10",
-        "androidx.camera:camera-lifecycle:1.0.0-beta10",
-        "androidx.constraintlayout:constraintlayout:aar:1.1.3",
-        "androidx.core:core:aar:1.1.0-rc03",
-        "androidx.legacy:legacy-support-v4:aar:1.0.0",
-        "androidx.recyclerview:recyclerview:aar:1.1.0-beta02",
-        "androidx.test.espresso:espresso-core:3.1.1",
-        "com.github.bumptech.glide:glide:4.11.0",
-        "com.google.android.material:material:aar:1.0.0-rc01",
-        "com.google.auto.value:auto-value:1.8.1",
-        "com.google.auto.value:auto-value-annotations:1.8.1",
-        "com.google.code.findbugs:jsr305:latest.release",
-        "com.google.flogger:flogger-system-backend:0.6",
-        "com.google.flogger:flogger:0.6",
-        "com.google.guava:guava:27.0.1-android",
-        "com.google.guava:listenablefuture:1.0",
-        "junit:junit:4.12",
-        "org.hamcrest:hamcrest-library:1.3",
-    ],
-    fetch_sources = True,
-    repositories = [
-        "https://maven.google.com",
-        "https://dl.google.com/dl/android/maven2",
-        "https://repo1.maven.org/maven2",
-        "https://jcenter.bintray.com",
-    ],
-    version_conflict_policy = "pinned",
-)
-
 # Needed by TensorFlow
 http_archive(
     name = "io_bazel_rules_closure",
@@ -428,10 +399,10 @@ http_archive(
 )
 
 # Tensorflow repo should always go after the other external dependencies.
-# 2021-07-29
-_TENSORFLOW_GIT_COMMIT = "52a2905cbc21034766c08041933053178c5d10e3"
+# 2021-12-02
+_TENSORFLOW_GIT_COMMIT = "18a1dc0ba806dc023808531f0373d9ec068e64bf"
 
-_TENSORFLOW_SHA256 = "06d4691bcdb700f3275fa0971a1585221c2b9f3dffe867963be565a6643d7f56"
+_TENSORFLOW_SHA256 = "85b90416f7a11339327777bccd634de00ca0de2cf334f5f0727edcb11ff9289a"
 
 http_archive(
     name = "org_tensorflow",
@@ -443,7 +414,7 @@ http_archive(
         "@com_google_mediapipe//third_party:org_tensorflow_objc_cxx17.diff",
         # Diff is generated with a script, don't update it manually.
         "@com_google_mediapipe//third_party:org_tensorflow_custom_ops.diff",
-        "@//third_party:tensorflow_python_path.diff",
+        "@//third_party:tensorflow_xnnpack_emscripten_fixes.diff",
     ],
     sha256 = _TENSORFLOW_SHA256,
     strip_prefix = "tensorflow-%s" % _TENSORFLOW_GIT_COMMIT,

@@ -232,6 +232,19 @@ MpReturnCode mp_Packet__GetByteString(mediapipe::Packet* packet, const char** va
   CATCH_ALL
 }
 
+MpReturnCode mp_Packet__ConsumeString(mediapipe::Packet* packet, absl::StatusOr<std::string>** status_or_value_out) {
+  TRY_ALL
+    auto status_or_string = packet->Consume<std::string>();
+
+    if (status_or_string.ok()) {
+      *status_or_value_out = new absl::StatusOr<std::string>{std::move(*status_or_string.value().release())};
+    } else {
+      *status_or_value_out = new absl::StatusOr<std::string>{status_or_string.status()};
+    }
+    RETURN_CODE(MpReturnCode::Success);
+  CATCH_ALL
+}
+
 MpReturnCode mp_Packet__ValidateAsString(mediapipe::Packet* packet, absl::Status** status_out) {
   TRY
     *status_out = new absl::Status{packet->ValidateAsType<std::string>()};
@@ -258,15 +271,15 @@ MpReturnCode mp_SidePacket__emplace__PKc_Rp(SidePacket* side_packet, const char*
 
 MpReturnCode mp_SidePacket__at__PKc(SidePacket* side_packet, const char* key, mediapipe::Packet** packet_out) {
   TRY
-    try {
-      auto packet = side_packet->at(std::string(key));
-      // copy
-      *packet_out = new mediapipe::Packet{packet};
-      RETURN_CODE(MpReturnCode::Success);
-    } catch (std::out_of_range&) {
-      *packet_out = nullptr;
-      RETURN_CODE(MpReturnCode::Success);
-    }
+    auto packet = side_packet->at(std::string(key));
+    // copy
+    *packet_out = new mediapipe::Packet{packet};
+    RETURN_CODE(MpReturnCode::Success);
+#ifndef MEDIAPIPE_IGNORE_EXCEPTION
+  } catch (std::out_of_range&) {
+    *packet_out = nullptr;
+    RETURN_CODE(MpReturnCode::Success);
+#endif
   CATCH_EXCEPTION
 }
 

@@ -35,6 +35,18 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//mediapipe_api:common",
+        "//mediapipe_api/external/absl:statusor",
+    ],
+    alwayslink = True,
+)
+
+cc_library(
+    name = "wasm_patch",
+    srcs = ["wasm_patch.cc"],
+    hdrs = ["wasm_patch.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mediapipe_api:common",
     ],
     alwayslink = True,
 )

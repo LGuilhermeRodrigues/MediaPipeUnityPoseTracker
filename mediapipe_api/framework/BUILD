@@ -4,6 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("//mediapipe_api:csharp_proto_src.bzl", "csharp_proto_src")
 
 package(
@@ -75,6 +76,32 @@ cc_library(
         "@com_google_mediapipe//mediapipe/framework:timestamp",
     ],
     alwayslink = True,
+)
+
+cc_library(
+    name = "validated_graph_config",
+    srcs = ["validated_graph_config.cc"],
+    hdrs = ["validated_graph_config.h"],
+    deps = [
+        "//mediapipe_api:common",
+        "//mediapipe_api/external:protobuf",
+        "@com_google_mediapipe//mediapipe/framework:validated_graph_config",
+    ],
+    alwayslink = True,
+)
+
+pkg_files(
+    name = "proto_srcs",
+    srcs = [
+        ":calculator_cs",
+        ":calculator_options_cs",
+        ":mediapipe_options_cs",
+        ":packet_factory_cs",
+        ":packet_generator_cs",
+        ":status_handler_cs",
+        ":stream_handler_cs",
+    ],
+    prefix = "Framework",
 )
 
 csharp_proto_src(

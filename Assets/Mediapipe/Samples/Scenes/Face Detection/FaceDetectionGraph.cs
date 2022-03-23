@@ -6,7 +6,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.Events;
+
+using Google.Protobuf;
 
 namespace Mediapipe.Unity.FaceDetection
 {
@@ -18,46 +22,55 @@ namespace Mediapipe.Unity.FaceDetection
       FullRangeSparse = 1,
     }
     public ModelType modelType = ModelType.ShortRange;
+
+    private float _minDetectionConfidence = 0.5f;
+    public float minDetectionConfidence
+    {
+      get => _minDetectionConfidence;
+      set => _minDetectionConfidence = Mathf.Clamp01(value);
+    }
+
 #pragma warning disable IDE1006
     public UnityEvent<List<Detection>> OnFaceDetectionsOutput = new UnityEvent<List<Detection>>();
 #pragma warning restore IDE1006
 
     private const string _InputStreamName = "input_video";
-
     private const string _FaceDetectionsStreamName = "face_detections";
     private OutputStream<DetectionVectorPacket, List<Detection>> _faceDetectionsStream;
-    protected long prevFaceDetectionsMicrosec = 0;
 
-    public override Status StartRun(ImageSource imageSource)
+    public override void StartRun(ImageSource imageSource)
     {
-      InitializeOutputStreams();
-      _faceDetectionsStream.StartPolling(true).AssertOk();
-      return calculatorGraph.StartRun(BuildSidePacket(imageSource));
-    }
-
-    public Status StartRunAsync(ImageSource imageSource)
-    {
-      InitializeOutputStreams();
-      _faceDetectionsStream.AddListener(FaceDetectionsCallback, true).AssertOk();
-      return calculatorGraph.StartRun(BuildSidePacket(imageSource));
+      if (runningMode.IsSynchronous())
+      {
+        _faceDetectionsStream.StartPolling().AssertOk();
+      }
+      else
+      {
+        _faceDetectionsStream.AddListener(FaceDetectionsCallback).AssertOk();
+      }
+      StartRun(BuildSidePacket(imageSource));
     }
 
     public override void Stop()
     {
       base.Stop();
       OnFaceDetectionsOutput.RemoveAllListeners();
+      _faceDetectionsStream = null;
     }
 
-    public Status AddTextureFrameToInputStream(TextureFrame textureFrame)
+    public void AddTextureFrameToInputStream(TextureFrame textureFrame)
     {
-      return AddTextureFrameToInputStream(_InputStreamName, textureFrame);
+      AddTextureFrameToInputStream(_InputStreamName, textureFrame);
     }
 
-    public List<Detection> FetchNextValue()
+    public bool TryGetNext(out List<Detection> faceDetections, bool allowBlock = true)
     {
-      var _ = _faceDetectionsStream.TryGetNext(out var faceDetections);
-      OnFaceDetectionsOutput.Invoke(faceDetections);
-      return faceDetections;
+      if (TryGetNext(_faceDetectionsStream, out faceDetections, allowBlock, GetCurrentTimestampMicrosec()))
+      {
+        OnFaceDetectionsOutput.Invoke(faceDetections);
+        return true;
+      }
+      return false;
     }
 
     [AOT.MonoPInvokeCallback(typeof(CalculatorGraph.NativePacketCallback))]
@@ -67,7 +80,7 @@ namespace Mediapipe.Unity.FaceDetection
       {
         using (var packet = new DetectionVectorPacket(ptr, false))
         {
-          if (faceDetectionGraph.TryGetPacketValue(packet, ref faceDetectionGraph.prevFaceDetectionsMicrosec, out var value))
+          if (faceDetectionGraph._faceDetectionsStream.TryGetPacketValue(packet, out var value, faceDetectionGraph.timeoutMicrosec))
           {
             faceDetectionGraph.OnFaceDetectionsOutput.Invoke(value);
           }
@@ -83,9 +96,37 @@ namespace Mediapipe.Unity.FaceDetection
       };
     }
 
-    protected void InitializeOutputStreams()
+    protected override Status ConfigureCalculatorGraph(CalculatorGraphConfig config)
     {
-      _faceDetectionsStream = new OutputStream<DetectionVectorPacket, List<Detection>>(calculatorGraph, _FaceDetectionsStreamName);
+      if (runningMode == RunningMode.NonBlockingSync)
+      {
+        _faceDetectionsStream = new OutputStream<DetectionVectorPacket, List<Detection>>(calculatorGraph, _FaceDetectionsStreamName, config.AddPacketPresenceCalculator(_FaceDetectionsStreamName));
+      }
+      else
+      {
+        _faceDetectionsStream = new OutputStream<DetectionVectorPacket, List<Detection>>(calculatorGraph, _FaceDetectionsStreamName, true);
+      }
+
+      using (var validatedGraphConfig = new ValidatedGraphConfig())
+      {
+        var status = validatedGraphConfig.Initialize(config);
+
+        if (!status.Ok()) { return status; }
+
+        var extensionRegistry = new ExtensionRegistry() { TensorsToDetectionsCalculatorOptions.Extensions.Ext };
+        var cannonicalizedConfig = validatedGraphConfig.Config(extensionRegistry);
+        var tensorsToDetectionsCalculators = cannonicalizedConfig.Node.Where((node) => node.Calculator == "TensorsToDetectionsCalculator").ToList();
+
+        foreach (var calculator in tensorsToDetectionsCalculators)
+        {
+          if (calculator.Options.HasExtension(TensorsToDetectionsCalculatorOptions.Extensions.Ext))
+          {
+            var options = calculator.Options.GetExtension(TensorsToDetectionsCalculatorOptions.Extensions.Ext);
+            options.MinScoreThresh = minDetectionConfidence;
+          }
+        }
+        return calculatorGraph.Initialize(cannonicalizedConfig);
+      }
     }
 
     private SidePacket BuildSidePacket(ImageSource imageSource)
@@ -94,6 +135,8 @@ namespace Mediapipe.Unity.FaceDetection
 
       SetImageTransformationOptions(sidePacket, imageSource);
       sidePacket.Emplace("model_type", new IntPacket((int)modelType));
+
+      Logger.LogInfo(TAG, $"Model Selection = {modelType}");
 
       return sidePacket;
     }

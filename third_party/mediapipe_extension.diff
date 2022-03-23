@@ -1,12 +1,86 @@
+diff --git a/mediapipe/BUILD b/mediapipe/BUILD
+index 1171ea6..6c4a7fb 100644
+--- a/mediapipe/BUILD
++++ b/mediapipe/BUILD
+@@ -139,6 +139,31 @@ config_setting(
+     values = {"cpu": "x64_windows"},
+ )
+ 
++config_setting(
++    name = "emscripten",
++    values = {"crosstool_top": "@emsdk//emscripten_toolchain:everything"},
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "emscripten_wasm",
++    values = {
++        "crosstool_top": "@emsdk//emscripten_toolchain:everything",
++        "cpu": "wasm",
++    },
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "emscripten_wasmsimd",
++    values = {
++        "crosstool_top": "@emsdk//emscripten_toolchain:everything",
++        "cpu": "wasm",
++        "copt": "-msimd128",
++    },
++    visibility = ["//visibility:public"],
++)
++
+ exports_files(
+     ["provisioning_profile.mobileprovision"],
+     visibility = ["//visibility:public"],
+diff --git a/mediapipe/calculators/tensor/BUILD b/mediapipe/calculators/tensor/BUILD
+index 72c2f51..d43c261 100644
+--- a/mediapipe/calculators/tensor/BUILD
++++ b/mediapipe/calculators/tensor/BUILD
+@@ -35,6 +35,7 @@ selects.config_setting_group(
+     name = "compute_shader_unavailable",
+     match_any = [
+         "//mediapipe/gpu:disable_gpu",
++        "//mediapipe:emscripten",
+     ],
+ )
+ 
+@@ -572,6 +573,11 @@ cc_library(
+             "//mediapipe/gpu:MPPMetalHelper",
+             "//mediapipe/gpu:gpu_buffer",
+         ],
++        "//mediapipe:emscripten": [
++            ":image_to_tensor_converter_gl_texture",
++            "//mediapipe/gpu:gl_calculator_helper",
++            "//mediapipe/gpu:gpu_buffer",
++        ],
+         "//conditions:default": [
+             ":image_to_tensor_converter_gl_buffer",
+             "//mediapipe/gpu:gl_calculator_helper",
+diff --git a/mediapipe/gpu/BUILD b/mediapipe/gpu/BUILD
+index 2d163b4..e925edc 100644
+--- a/mediapipe/gpu/BUILD
++++ b/mediapipe/gpu/BUILD
+@@ -154,6 +154,9 @@ cc_library(
+         "//mediapipe:macos": [
+             "gl_context_nsgl.cc",
+         ],
++        "//mediapipe:emscripten": [
++            "gl_context_webgl.cc",
++        ],
+     }),
+     hdrs = ["gl_context.h"],
+     copts = select({
 diff --git a/mediapipe/gpu/gl_calculator_helper.cc b/mediapipe/gpu/gl_calculator_helper.cc
-index efd822a..c6da56d 100644
+index d015c59..05dee07 100644
 --- a/mediapipe/gpu/gl_calculator_helper.cc
 +++ b/mediapipe/gpu/gl_calculator_helper.cc
-@@ -130,6 +130,10 @@ GlTexture GlCalculatorHelper::CreateDestinationTexture(int output_width,
+@@ -128,6 +128,10 @@ GlTexture GlCalculatorHelper::CreateDestinationTexture(int output_width,
    return impl_->CreateDestinationTexture(output_width, output_height, format);
  }
  
-+GlTexture GlCalculatorHelper::CreateDestinationTexture(const GpuBuffer& pixel_buffer) {
++GlTexture GlCalculatorHelper::CreateDestinationTexture(GpuBuffer& pixel_buffer) {
 +  return impl_->CreateDestinationTexture(pixel_buffer);
 +}
 +
@@ -14,35 +88,35 @@ index efd822a..c6da56d 100644
    return impl_->GetGlContext();
  }
 diff --git a/mediapipe/gpu/gl_calculator_helper.h b/mediapipe/gpu/gl_calculator_helper.h
-index d6bd718..d2dec4b 100644
+index 5ac0ab1..f4007a0 100644
 --- a/mediapipe/gpu/gl_calculator_helper.h
 +++ b/mediapipe/gpu/gl_calculator_helper.h
-@@ -134,6 +134,8 @@ class GlCalculatorHelper {
+@@ -141,6 +141,8 @@ class GlCalculatorHelper {
        int output_width, int output_height,
        GpuBufferFormat format = GpuBufferFormat::kBGRA32);
  
-+  GlTexture CreateDestinationTexture(const GpuBuffer& pixel_buffer);
++  GlTexture CreateDestinationTexture(GpuBuffer& pixel_buffer);
 +
    // The OpenGL name of the output framebuffer.
    GLuint framebuffer() const;
  
 diff --git a/mediapipe/gpu/gl_calculator_helper_impl.h b/mediapipe/gpu/gl_calculator_helper_impl.h
-index 40b53f5..3214043 100644
+index c17c724..bab2fb2 100644
 --- a/mediapipe/gpu/gl_calculator_helper_impl.h
 +++ b/mediapipe/gpu/gl_calculator_helper_impl.h
 @@ -49,6 +49,7 @@ class GlCalculatorHelperImpl {
    // Creates a framebuffer and returns the texture that it is bound to.
    GlTexture CreateDestinationTexture(int output_width, int output_height,
                                       GpuBufferFormat format);
-+  GlTexture CreateDestinationTexture(const GpuBuffer& gpu_buffer);
++  GlTexture CreateDestinationTexture(GpuBuffer& gpu_buffer);
  
    GLuint framebuffer() const { return framebuffer_; }
    void BindFramebuffer(const GlTexture& dst);
 diff --git a/mediapipe/gpu/gl_calculator_helper_impl_common.cc b/mediapipe/gpu/gl_calculator_helper_impl_common.cc
-index fef2550..67f7b43 100644
+index 0bcf089..23419ad 100644
 --- a/mediapipe/gpu/gl_calculator_helper_impl_common.cc
 +++ b/mediapipe/gpu/gl_calculator_helper_impl_common.cc
-@@ -146,14 +146,18 @@ std::unique_ptr<GpuBuffer> GlTexture::GetFrame<GpuBuffer>() const {
+@@ -143,12 +143,17 @@ std::unique_ptr<GpuBuffer> GlTexture::GetFrame<GpuBuffer>() const {
  
  GlTexture GlCalculatorHelperImpl::CreateDestinationTexture(
      int width, int height, GpuBufferFormat format) {
@@ -52,19 +126,84 @@ index fef2550..67f7b43 100644
 +  return CreateDestinationTexture(buffer);
 +}
 +
-+GlTexture GlCalculatorHelperImpl::CreateDestinationTexture(const GpuBuffer& gpu_buffer) {
++GlTexture GlCalculatorHelperImpl::CreateDestinationTexture(GpuBuffer& gpu_buffer) {
    if (!framebuffer_) {
      CreateFramebuffer();
    }
  
--  GpuBuffer buffer =
+-  GpuBuffer gpu_buffer =
 -      gpu_resources_.gpu_buffer_pool().GetBuffer(width, height, format);
--  GlTexture texture = MapGpuBuffer(buffer, 0, false);
--
-+  GlTexture texture = MapGpuBuffer(gpu_buffer, 0, false);
-   return texture;
+   return MapGpuBuffer(gpu_buffer, gpu_buffer.GetWriteView<GlTextureView>(0));
  }
  
+diff --git a/mediapipe/gpu/gl_context_webgl.cc b/mediapipe/gpu/gl_context_webgl.cc
+index 01fc12d..aed6686 100644
+--- a/mediapipe/gpu/gl_context_webgl.cc
++++ b/mediapipe/gpu/gl_context_webgl.cc
+@@ -50,6 +50,10 @@ absl::Status GlContext::CreateContextInternal(
+     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE external_context, int webgl_version) {
+   CHECK(webgl_version == 1 || webgl_version == 2);
+ 
++  if (external_context != 0) {
++    LOG(WARNING) << "external context is not supported, so it may not work correctly";
++  }
++
+   EmscriptenWebGLContextAttributes attrs;
+   emscripten_webgl_init_context_attributes(&attrs);
+   attrs.explicitSwapControl = 0;
+@@ -77,37 +81,33 @@ absl::Status GlContext::CreateContextInternal(
+   //   and OFFSCREEN_FRAMEBUFFER)
+   // clang-format off
+   EM_ASM(
+-    let init_once = true;
+-    if (init_once) {
+-      const cachedFindCanvasEventTarget = findCanvasEventTarget;
++    let canvas = null;
+ 
+-      if (typeof cachedFindCanvasEventTarget !== 'function') {
+-        if (typeof console !== 'undefined') {
+-          console.error('Expected Emscripten global function '
+-              + '"findCanvasEventTarget" not found. WebGL context creation '
+-              + 'may fail.');
+-        }
+-        return;
++    if (typeof findCanvasEventTarget != 'function') {
++      if (typeof console !== 'undefined') {
++        console.error('Expected Emscripten global function '
++            + '"findCanvasEventTarget" not found. WebGL context creation '
++            + 'may fail.');
+       }
++      return;
++    }
++
++    if (typeof findCanvasEventTarget.cached != 'function') {
++      const cachedFindCanvasEventTarget = findCanvasEventTarget;
+ 
+       findCanvasEventTarget = function(target) {
+         if (target == 0) {
+-          if (Module && Module.canvas) {
+-            return Module.canvas;
+-          } else if (Module && Module.canvasCssSelector) {
+-            return cachedFindCanvasEventTarget(Module.canvasCssSelector);
+-          }
+-          if (typeof console !== 'undefined') {
+-            console.warn('Module properties canvas and canvasCssSelector not ' +
+-                         'found during WebGL context creation.');
++          if (canvas === null) {
++            canvas = document.createElement('canvas');
+           }
++          return canvas;
+         }
+         // We still go through with the find attempt, although for most use
+         // cases it will not succeed, just in case the user does want to fall-
+         // back.
+         return cachedFindCanvasEventTarget(target);
+       };  // NOLINT: Necessary semicolon.
+-      init_once = false;
++      findCanvasEventTarget.cached = cachedFindCanvasEventTarget;
+     }
+   );
+   // clang-format on
 diff --git a/mediapipe/gpu/gl_scaler_calculator.cc b/mediapipe/gpu/gl_scaler_calculator.cc
 index fa06c88..0d0bd0c 100644
 --- a/mediapipe/gpu/gl_scaler_calculator.cc
@@ -147,114 +286,6 @@ index fa06c88..0d0bd0c 100644
      helper_.BindFramebuffer(dst);
      glActiveTexture(GL_TEXTURE1);
      glBindTexture(src1.target(), src1.name());
-diff --git a/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_cpu.pbtxt b/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_cpu.pbtxt
-index e1a25e9..1d99672 100644
---- a/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_cpu.pbtxt
-+++ b/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_cpu.pbtxt
-@@ -8,6 +8,11 @@ input_stream: "IMAGE:input_video"
- # Face-related pose landmarks. (NormalizedLandmarkList)
- input_stream: "FACE_LANDMARKS_FROM_POSE:face_landmarks_from_pose"
- 
-+# Whether to run the face landmark model with attention on lips and eyes to
-+# provide more accuracy, and additionally output iris landmarks. If unspecified,
-+# functions as set to false. (bool)
-+input_side_packet: "REFINE_LANDMARKS:refine_landmarks"
-+
- # Face landmarks. (NormalizedLandmarkList)
- output_stream: "FACE_LANDMARKS:face_landmarks"
- 
-@@ -72,5 +77,6 @@ node {
-   calculator: "FaceLandmarkCpu"
-   input_stream: "IMAGE:input_video"
-   input_stream: "ROI:face_tracking_roi"
-+  input_side_packet: "WITH_ATTENTION:refine_landmarks"
-   output_stream: "LANDMARKS:face_landmarks"
- }
-diff --git a/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_gpu.pbtxt b/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_gpu.pbtxt
-index 872526b..24a9854 100644
---- a/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_gpu.pbtxt
-+++ b/mediapipe/modules/holistic_landmark/face_landmarks_from_pose_gpu.pbtxt
-@@ -8,6 +8,11 @@ input_stream: "IMAGE:input_video"
- # Face-related pose landmarks. (NormalizedLandmarkList)
- input_stream: "FACE_LANDMARKS_FROM_POSE:face_landmarks_from_pose"
- 
-+# Whether to run the face landmark model with attention on lips and eyes to
-+# provide more accuracy, and additionally output iris landmarks. If unspecified,
-+# functions as set to false. (bool)
-+input_side_packet: "REFINE_LANDMARKS:refine_landmarks"
-+
- # Face landmarks. (NormalizedLandmarkList)
- output_stream: "FACE_LANDMARKS:face_landmarks"
- 
-@@ -72,5 +77,6 @@ node {
-   calculator: "FaceLandmarkGpu"
-   input_stream: "IMAGE:input_video"
-   input_stream: "ROI:face_tracking_roi"
-+  input_side_packet: "WITH_ATTENTION:refine_landmarks"
-   output_stream: "LANDMARKS:face_landmarks"
- }
-diff --git a/mediapipe/modules/holistic_landmark/holistic_landmark_cpu.pbtxt b/mediapipe/modules/holistic_landmark/holistic_landmark_cpu.pbtxt
-index 878e230..4490895 100644
---- a/mediapipe/modules/holistic_landmark/holistic_landmark_cpu.pbtxt
-+++ b/mediapipe/modules/holistic_landmark/holistic_landmark_cpu.pbtxt
-@@ -35,6 +35,7 @@
- #     input_side_packet: "SMOOTH_LANDMARKS:smooth_landmarks"
- #     input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
- #     input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
-+#     input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
- #     input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
- #     output_stream: "POSE_LANDMARKS:pose_landmarks"
- #     output_stream: "FACE_LANDMARKS:face_landmarks"
-@@ -70,6 +71,11 @@ input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
- # jitter. If unspecified, functions as set to true. (bool)
- input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
- 
-+# Whether to run the face landmark model with attention on lips and eyes to
-+# provide more accuracy, and additionally output iris landmarks. If unspecified,
-+# functions as set to false. (bool)
-+input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
-+
- # Whether landmarks on the previous image should be used to help localize
- # landmarks on the current image. (bool)
- input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
-@@ -135,5 +141,6 @@ node {
-   calculator: "FaceLandmarksFromPoseCpu"
-   input_stream: "IMAGE:image"
-   input_stream: "FACE_LANDMARKS_FROM_POSE:face_landmarks_from_pose"
-+  input_side_packet: "REFINE_LANDMARKS:refine_face_landmarks"
-   output_stream: "FACE_LANDMARKS:face_landmarks"
- }
-diff --git a/mediapipe/modules/holistic_landmark/holistic_landmark_gpu.pbtxt b/mediapipe/modules/holistic_landmark/holistic_landmark_gpu.pbtxt
-index dc2a7b9..2ae20fe 100644
---- a/mediapipe/modules/holistic_landmark/holistic_landmark_gpu.pbtxt
-+++ b/mediapipe/modules/holistic_landmark/holistic_landmark_gpu.pbtxt
-@@ -35,6 +35,7 @@
- #     input_side_packet: "SMOOTH_LANDMARKS:smooth_landmarks"
- #     input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
- #     input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
-+#     input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
- #     input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
- #     output_stream: "POSE_LANDMARKS:pose_landmarks"
- #     output_stream: "FACE_LANDMARKS:face_landmarks"
-@@ -70,6 +71,11 @@ input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
- # jitter. If unspecified, functions as set to true. (bool)
- input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
- 
-+# Whether to run the face landmark model with attention on lips and eyes to
-+# provide more accuracy, and additionally output iris landmarks. If unspecified,
-+# functions as set to false. (bool)
-+input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
-+
- # Whether landmarks on the previous image should be used to help localize
- # landmarks on the current image. (bool)
- input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
-@@ -135,5 +141,6 @@ node {
-   calculator: "FaceLandmarksFromPoseGpu"
-   input_stream: "IMAGE:image"
-   input_stream: "FACE_LANDMARKS_FROM_POSE:face_landmarks_from_pose"
-+  input_side_packet: "REFINE_LANDMARKS:refine_face_landmarks"
-   output_stream: "FACE_LANDMARKS:face_landmarks"
- }
 diff --git a/mediapipe/modules/objectron/objectron_gpu.pbtxt b/mediapipe/modules/objectron/objectron_gpu.pbtxt
 index 7ef2b67..83856d5 100644
 --- a/mediapipe/modules/objectron/objectron_gpu.pbtxt

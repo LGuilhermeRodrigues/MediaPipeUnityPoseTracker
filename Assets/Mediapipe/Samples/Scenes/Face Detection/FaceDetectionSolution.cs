@@ -5,135 +5,41 @@
 // https://opensource.org/licenses/MIT.
 
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Mediapipe.Unity.FaceDetection
 {
-  public class FaceDetectionSolution : Solution
+  public class FaceDetectionSolution : ImageSourceSolution<FaceDetectionGraph>
   {
-    [SerializeField] private Screen _screen;
     [SerializeField] private DetectionListAnnotationController _faceDetectionsAnnotationController;
-    [SerializeField] private FaceDetectionGraph _graphRunner;
-    [SerializeField] private TextureFramePool _textureFramePool;
-
-    private Coroutine _coroutine;
-
-    public RunningMode runningMode;
 
     public FaceDetectionGraph.ModelType modelType
     {
-      get => _graphRunner.modelType;
-      set => _graphRunner.modelType = value;
+      get => graphRunner.modelType;
+      set => graphRunner.modelType = value;
     }
 
-    public long timeoutMillisec
+    protected override void OnStartRun()
     {
-      get => _graphRunner.timeoutMillisec;
-      set => _graphRunner.SetTimeoutMillisec(value);
+      graphRunner.OnFaceDetectionsOutput.AddListener(_faceDetectionsAnnotationController.DrawLater);
+      SetupAnnotationController(_faceDetectionsAnnotationController, ImageSourceProvider.ImageSource);
     }
 
-    public override void Play()
+    protected override void AddTextureFrameToInputStream(TextureFrame textureFrame)
     {
-      if (_coroutine != null)
+      graphRunner.AddTextureFrameToInputStream(textureFrame);
+    }
+
+    protected override IEnumerator WaitForNextValue()
+    {
+      if (runningMode == RunningMode.Sync)
       {
-        Stop();
+        var _ = graphRunner.TryGetNext(out var _, true);
       }
-      base.Play();
-      _coroutine = StartCoroutine(Run());
-    }
-
-    public override void Pause()
-    {
-      base.Pause();
-      ImageSourceProvider.ImageSource.Pause();
-    }
-
-    public override void Resume()
-    {
-      base.Resume();
-      var _ = StartCoroutine(ImageSourceProvider.ImageSource.Resume());
-    }
-
-    public override void Stop()
-    {
-      base.Stop();
-      StopCoroutine(_coroutine);
-      ImageSourceProvider.ImageSource.Stop();
-      _graphRunner.Stop();
-    }
-
-    private IEnumerator Run()
-    {
-      var graphInitRequest = _graphRunner.WaitForInit();
-      var imageSource = ImageSourceProvider.ImageSource;
-
-      yield return imageSource.Play();
-
-      if (!imageSource.isPrepared)
+      else if (runningMode == RunningMode.NonBlockingSync)
       {
-        Logger.LogError(TAG, "Failed to start ImageSource, exiting...");
-        yield break;
+        yield return new WaitUntil(() => graphRunner.TryGetNext(out var _, false));
       }
-      // NOTE: The _screen will be resized later, keeping the aspect ratio.
-      _screen.Initialize(imageSource);
-
-      Logger.LogInfo(TAG, $"Model Selection = {modelType}");
-      Logger.LogInfo(TAG, $"Running Mode = {runningMode}");
-
-      yield return graphInitRequest;
-      if (graphInitRequest.isError)
-      {
-        Logger.LogError(TAG, graphInitRequest.error);
-        yield break;
-      }
-
-      if (runningMode == RunningMode.Async)
-      {
-        _graphRunner.OnFaceDetectionsOutput.AddListener(OnFaceDetectionsOutput);
-        _graphRunner.StartRunAsync(imageSource).AssertOk();
-      }
-      else
-      {
-        _graphRunner.StartRun(imageSource).AssertOk();
-      }
-
-      // Use RGBA32 as the input format.
-      // TODO: When using GpuBuffer, MediaPipe assumes that the input format is BGRA, so the following code must be fixed.
-      _textureFramePool.ResizeTexture(imageSource.textureWidth, imageSource.textureHeight, TextureFormat.RGBA32);
-
-      SetupAnnotationController(_faceDetectionsAnnotationController, imageSource);
-
-      while (true)
-      {
-        yield return new WaitWhile(() => isPaused);
-
-        var textureFrameRequest = _textureFramePool.WaitForNextTextureFrame();
-        yield return textureFrameRequest;
-        var textureFrame = textureFrameRequest.result;
-
-        // Copy current image to TextureFrame
-        ReadFromImageSource(imageSource, textureFrame);
-
-        _graphRunner.AddTextureFrameToInputStream(textureFrame).AssertOk();
-
-        if (runningMode == RunningMode.Sync)
-        {
-          // TODO: copy texture before `textureFrame` is released
-          _screen.ReadSync(textureFrame);
-
-          // When running synchronously, wait for the outputs here (blocks the main thread).
-          var detections = _graphRunner.FetchNextValue();
-          _faceDetectionsAnnotationController.DrawNow(detections);
-        }
-
-        yield return new WaitForEndOfFrame();
-      }
-    }
-
-    private void OnFaceDetectionsOutput(List<Detection> detections)
-    {
-      _faceDetectionsAnnotationController.DrawLater(detections);
     }
   }
 }
