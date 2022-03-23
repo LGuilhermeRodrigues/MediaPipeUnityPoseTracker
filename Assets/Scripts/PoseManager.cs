@@ -47,15 +47,18 @@ public class PoseManager : MonoBehaviour
         
     }
 
-    private static RepeatedField<Landmark> landmarks;
+    private static RepeatedField<NormalizedLandmark> landmarks;
 
     private int counter = 0;
 
     private bool startCounter = true;
 
     private bool poseFound = false;
+    
+    private int cameraResolutionWidth = 1280;
+    private int cameraResolutionHeight = 720;
 
-    public void SetPose(RepeatedField<Landmark> newLandmarks)
+    public void SetPose(RepeatedField<NormalizedLandmark> newLandmarks)
     {
         if (startCounter)
         {
@@ -68,6 +71,10 @@ public class PoseManager : MonoBehaviour
             poseFound = true;
             landmarks = newLandmarks;
             counter = counter + 1;
+        }
+        else
+        {
+          counter = counter + 1;
         }
     }
 
@@ -96,7 +103,7 @@ public class PoseManager : MonoBehaviour
         if (hasPose())
         {
             return new Vector3(
-                landmarks[(int) idx_point].X,
+                landmarks[(int) idx_point].X, 
                 landmarks[(int) idx_point].Y,
                 landmarks[(int) idx_point].Z);
         }
@@ -109,18 +116,10 @@ public class PoseManager : MonoBehaviour
     
     public float get3DAngle(pose idx_first, pose idx_mid, pose idx_last)
     {
-        var first = landmarks[(int) idx_first];
-        var mid = landmarks[(int) idx_mid];
-        var last = landmarks[(int) idx_last];
-        
-        var b = new Vector3(mid.X, mid.Y, mid.Z);
-        var ba = (new Vector3(first.X, first.Y, first.Z)) - b;
-        var bc = (new Vector3(last.X, last.Y, last.Z)) - b;
-
-        var cosine = Vector3.Dot(ba, bc) / (ba.magnitude * bc.magnitude);
-        var angle = Mathf.Acos(cosine);
-        var result = Mathf.Rad2Deg * angle;
-        return result;
+        var first = getPoint(idx_first);
+        var mid = getPoint(idx_mid);
+        var last = getPoint(idx_last);
+        return Vector3.Angle(first - mid, last - mid);
     }
     
     IEnumerator FramesPerSecondCoroutine()

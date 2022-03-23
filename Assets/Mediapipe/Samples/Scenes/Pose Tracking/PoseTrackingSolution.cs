@@ -152,12 +152,12 @@ namespace Mediapipe.Unity.PoseTracking
           _poseDetectionAnnotationController.DrawNow(value.poseDetection);
           _poseLandmarksAnnotationController.DrawNow(value.poseLandmarks);
           _poseWorldLandmarksAnnotationController.DrawNow(value.poseWorldLandmarks);
-          _roiFromLandmarksAnnotationController.DrawNow(value.roiFromLandmarks);
-          if (value.poseWorldLandmarks!=null)
+          //_roiFromLandmarksAnnotationController.DrawNow(value.roiFromLandmarks);
+          if (value.poseLandmarks!=null)
           {
             if (_poseManager)
             {
-              _poseManager.SetPose(value.poseWorldLandmarks.Landmark);
+              _poseManager.SetPose(value.poseLandmarks.Landmark);
             }
           }
         }

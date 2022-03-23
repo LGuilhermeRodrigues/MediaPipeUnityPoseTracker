@@ -9,18 +9,18 @@ EditorBuildSettings:
     path: Assets/Mediapipe/Samples/Scenes/Start Scene.unity
     guid: f7b359c19e6ae2d208e5ca4608b7c0b8
   - enabled: 1
-    path: Assets/Scenes/AvatarView.unity
-    guid: ce6d231f1b33c0449a34312aa3683c93
-  - enabled: 1
     path: Assets/Scenes/AnglesView.unity
     guid: adb5a40574af2584b87e8a0de5f4c427
+  - enabled: 1
+    path: Assets/Scenes/AvatarView.unity
+    guid: ce6d231f1b33c0449a34312aa3683c93
   - enabled: 1
     path: Assets/Mediapipe/Samples/Scenes/Pose Tracking/Pose Tracking.unity
     guid: a4964d5b8866fb3d8bd4c715728200c8
   - enabled: 1
     path: Assets/Mediapipe/Samples/Scenes/Hand Tracking/Hand Tracking.unity
     guid: 08035b20d3836a599ad2fd3d81e41ee5
-  - enabled: 1
+  - enabled: 0
     path: Assets/Mediapipe/Samples/Scenes/Holistic/Holistic.unity
     guid: 530502d398830609297010a1521c815f
   m_configObjects: {}
