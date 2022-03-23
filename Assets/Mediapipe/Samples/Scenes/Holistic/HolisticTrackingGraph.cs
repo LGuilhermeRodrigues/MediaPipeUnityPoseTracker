@@ -251,7 +251,6 @@ namespace Mediapipe.Unity.Holistic
       return new List<WaitForResult> {
         WaitForAsset("face_detection_short_range.bytes"),
         WaitForAsset(refineFaceLandmarks ? "face_landmark_with_attention.bytes" : "face_landmark.bytes"),
-        WaitForAsset("iris_landmark.bytes"),
         WaitForAsset("hand_landmark_full.bytes"),
         WaitForAsset("hand_recrop.bytes"),
         WaitForAsset("handedness.txt"),
