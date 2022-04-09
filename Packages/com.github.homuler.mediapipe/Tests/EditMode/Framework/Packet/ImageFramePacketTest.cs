@@ -43,7 +43,7 @@ namespace Tests
 
           using (var imageFrame = statusOrImageFrame.Value())
           {
-            Assert.AreEqual(imageFrame.Format(), ImageFormat.Format.UNKNOWN);
+            Assert.AreEqual(imageFrame.Format(), ImageFormat.Types.Format.Unknown);
           }
         }
       }
@@ -67,7 +67,7 @@ namespace Tests
 
             using (var imageFrame = statusOrImageFrame.Value())
             {
-              Assert.AreEqual(imageFrame.Format(), ImageFormat.Format.UNKNOWN);
+              Assert.AreEqual(imageFrame.Format(), ImageFormat.Types.Format.Unknown);
               Assert.AreEqual(packet.Timestamp(), timestamp);
             }
           }
@@ -96,6 +96,28 @@ namespace Tests
     }
     #endregion
 
+    #region #At
+    [Test]
+    public void At_ShouldReturnNewPacketWithTimestamp()
+    {
+      using (var timestamp = new Timestamp(1))
+      {
+        var packet = new ImageFramePacket(new ImageFrame(ImageFormat.Types.Format.Srgba, 10, 10)).At(timestamp);
+        Assert.AreEqual(packet.Get().Width(), 10);
+        Assert.AreEqual(packet.Timestamp(), timestamp);
+
+        using (var newTimestamp = new Timestamp(2))
+        {
+          var newPacket = packet.At(newTimestamp);
+          Assert.AreEqual(newPacket.Get().Width(), 10);
+          Assert.AreEqual(newPacket.Timestamp(), newTimestamp);
+        }
+
+        Assert.AreEqual(packet.Timestamp(), timestamp);
+      }
+    }
+    #endregion
+
     #region #Get
     [Test, SignalAbort]
     public void Get_ShouldThrowMediaPipeException_When_DataIsEmpty()
@@ -110,11 +132,11 @@ namespace Tests
 
     public void Get_ShouldReturnImageFrame_When_DataIsNotEmpty()
     {
-      using (var packet = new ImageFramePacket(new ImageFrame(ImageFormat.Format.SBGRA, 10, 10)))
+      using (var packet = new ImageFramePacket(new ImageFrame(ImageFormat.Types.Format.Sbgra, 10, 10)))
       {
         using (var imageFrame = packet.Get())
         {
-          Assert.AreEqual(imageFrame.Format(), ImageFormat.Format.SBGRA);
+          Assert.AreEqual(imageFrame.Format(), ImageFormat.Types.Format.Sbgra);
           Assert.AreEqual(imageFrame.Width(), 10);
           Assert.AreEqual(imageFrame.Height(), 10);
         }
@@ -126,7 +148,7 @@ namespace Tests
     [Test]
     public void Consume_ShouldReturnImageFrame()
     {
-      using (var packet = new ImageFramePacket(new ImageFrame(ImageFormat.Format.SBGRA, 10, 10)))
+      using (var packet = new ImageFramePacket(new ImageFrame(ImageFormat.Types.Format.Sbgra, 10, 10)))
       {
         using (var statusOrImageFrame = packet.Consume())
         {
@@ -134,7 +156,7 @@ namespace Tests
 
           using (var imageFrame = statusOrImageFrame.Value())
           {
-            Assert.AreEqual(imageFrame.Format(), ImageFormat.Format.SBGRA);
+            Assert.AreEqual(imageFrame.Format(), ImageFormat.Types.Format.Sbgra);
             Assert.AreEqual(imageFrame.Width(), 10);
             Assert.AreEqual(imageFrame.Height(), 10);
           }

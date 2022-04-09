@@ -110,6 +110,7 @@ cc_library(
             "@com_google_mediapipe//mediapipe/graphs/hand_tracking:desktop_tflite_calculators",
             "@com_google_mediapipe//mediapipe/graphs/holistic_tracking:holistic_tracking_cpu_graph_deps",
             "@com_google_mediapipe//mediapipe/graphs/pose_tracking:pose_tracking_cpu_deps",
+            "@com_google_mediapipe//mediapipe/graphs/selfie_segmentation:selfie_segmentation_cpu_deps",
             "@com_google_mediapipe//mediapipe/graphs/tracking:desktop_calculators",
         ],
         "//conditions:default": [
@@ -125,6 +126,7 @@ cc_library(
             "@com_google_mediapipe//mediapipe/graphs/hand_tracking:mobile_calculators",
             "@com_google_mediapipe//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_deps",
             "@com_google_mediapipe//mediapipe/graphs/pose_tracking:pose_tracking_gpu_deps",
+            "@com_google_mediapipe//mediapipe/graphs/selfie_segmentation:selfie_segmentation_gpu_deps",
             "@com_google_mediapipe//mediapipe/graphs/tracking:mobile_calculators",
         ],
     }),
@@ -167,20 +169,32 @@ pkg_asset(
         "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
         "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_heavy.tflite",
         "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_lite.tflite",
+        "@com_google_mediapipe//mediapipe/modules/selfie_segmentation:selfie_segmentation.tflite",
     ],
 )
 
 pkg_zip(
     name = "mediapipe_proto_srcs",
     srcs = [
+        "//mediapipe_api/calculators/audio:proto_srcs",
+        "//mediapipe_api/calculators/core:proto_srcs",
+        "//mediapipe_api/calculators/image:proto_srcs",
         "//mediapipe_api/calculators/tensor:proto_srcs",
+        "//mediapipe_api/calculators/tflite:proto_srcs",
         "//mediapipe_api/calculators/util:proto_srcs",
+        "//mediapipe_api/calculators/video:proto_srcs",
         "//mediapipe_api/framework:proto_srcs",
         "//mediapipe_api/framework/formats:proto_srcs",
+        "//mediapipe_api/framework/formats/annotation:proto_srcs",
+        "//mediapipe_api/framework/formats/motion:proto_srcs",
+        "//mediapipe_api/framework/formats/object_detection:proto_srcs",
+        "//mediapipe_api/gpu:proto_srcs",
         "//mediapipe_api/graphs/instant_motion_tracking/calculators:proto_srcs",
         "//mediapipe_api/graphs/object_detection_3d/calculators:proto_srcs",
         "//mediapipe_api/modules/face_geometry/protos:proto_srcs",
+        "//mediapipe_api/modules/holistic_landmark/calculators:proto_srcs",
         "//mediapipe_api/modules/objectron/calculators:proto_srcs",
         "//mediapipe_api/util:proto_srcs",
+        "//mediapipe_api/util/tracking:proto_srcs",
     ],
 )

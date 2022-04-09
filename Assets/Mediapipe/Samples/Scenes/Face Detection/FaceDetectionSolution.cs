@@ -5,6 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Mediapipe.Unity.FaceDetection
@@ -19,9 +20,19 @@ namespace Mediapipe.Unity.FaceDetection
       set => graphRunner.modelType = value;
     }
 
+    public float minDetectionConfidence
+    {
+      get => graphRunner.minDetectionConfidence;
+      set => graphRunner.minDetectionConfidence = value;
+    }
+
     protected override void OnStartRun()
     {
-      graphRunner.OnFaceDetectionsOutput.AddListener(_faceDetectionsAnnotationController.DrawLater);
+      if (!runningMode.IsSynchronous())
+      {
+        graphRunner.OnFaceDetectionsOutput += OnFaceDetectionsOutput;
+      }
+
       SetupAnnotationController(_faceDetectionsAnnotationController, ImageSourceProvider.ImageSource);
     }
 
@@ -32,14 +43,23 @@ namespace Mediapipe.Unity.FaceDetection
 
     protected override IEnumerator WaitForNextValue()
     {
+      List<Detection> faceDetections = null;
+
       if (runningMode == RunningMode.Sync)
       {
-        var _ = graphRunner.TryGetNext(out var _, true);
+        var _ = graphRunner.TryGetNext(out faceDetections, true);
       }
       else if (runningMode == RunningMode.NonBlockingSync)
       {
-        yield return new WaitUntil(() => graphRunner.TryGetNext(out var _, false));
+        yield return new WaitUntil(() => graphRunner.TryGetNext(out faceDetections, false));
       }
+
+      _faceDetectionsAnnotationController.DrawNow(faceDetections);
+    }
+
+    private void OnFaceDetectionsOutput(object stream, OutputEventArgs<List<Detection>> eventArgs)
+    {
+      _faceDetectionsAnnotationController.DrawLater(eventArgs.value);
     }
   }
 }

@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.0](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.8.4...v0.9.0) (2022-04-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* implement ImageFrame#TryReadChannel and MaskShader (#507)
+
+### Features
+
+* OutputStream API ([#516](https://github.com/homuler/MediaPipeUnityPlugin/issues/516)) ([2679000](https://github.com/homuler/MediaPipeUnityPlugin/commit/2679000e86942353a7e165932f8ee6fc127c1abf))
+
+
+### Bug Fixes
+
+* check Packet types at compile-time more properly ([#509](https://github.com/homuler/MediaPipeUnityPlugin/issues/509)) ([d03895d](https://github.com/homuler/MediaPipeUnityPlugin/commit/d03895d1e63c1f4e60c4e080b8cd89fbd9a3e797))
+* forget to commit ([#510](https://github.com/homuler/MediaPipeUnityPlugin/issues/510)) ([81fe7f8](https://github.com/homuler/MediaPipeUnityPlugin/commit/81fe7f8f809aa4eab095e474762a04bd11e56698))
+* ignore vertically_flipped in sync mode ([#517](https://github.com/homuler/MediaPipeUnityPlugin/issues/517)) ([7d080e3](https://github.com/homuler/MediaPipeUnityPlugin/commit/7d080e3b20530586b0158fdec3bd00115ca4df03))
+* **plugin:** fail to initialize GlSyncPoint ([#515](https://github.com/homuler/MediaPipeUnityPlugin/issues/515)) ([11188cb](https://github.com/homuler/MediaPipeUnityPlugin/commit/11188cb699b14f443aed8aac17b983b4271703f6))
+
+
+* implement ImageFrame#TryReadChannel and MaskShader ([#507](https://github.com/homuler/MediaPipeUnityPlugin/issues/507)) ([05adcb5](https://github.com/homuler/MediaPipeUnityPlugin/commit/05adcb54c487441075824dd502c2e31c2cf5c62b))
+
+### [0.8.4](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.8.3...v0.8.4) (2022-03-29)
+
+
+### Features
+
+* **plugin:** port ValidatedGraphConfig API ([#477](https://github.com/homuler/MediaPipeUnityPlugin/issues/477)) ([bde6874](https://github.com/homuler/MediaPipeUnityPlugin/commit/bde68746974b84ad7e8723c0fa927dcddc842907))
+* **sample:** implement MIN_(DETECTION|TRACKING)_CONFIDENCE ([#483](https://github.com/homuler/MediaPipeUnityPlugin/issues/483)) ([13c2a38](https://github.com/homuler/MediaPipeUnityPlugin/commit/13c2a38e129b1d0de59867ee57f65920fdee8f30))
+
+
+### Bug Fixes
+
+* install OpenCV 3.4.16 on Docker Windows Containers ([#484](https://github.com/homuler/MediaPipeUnityPlugin/issues/484)) ([4210673](https://github.com/homuler/MediaPipeUnityPlugin/commit/42106737e3d4b57efddd2e4d8e646b7b8e283fba))
+* **sample:** Anchor position is flipped ([#506](https://github.com/homuler/MediaPipeUnityPlugin/issues/506)) ([98cb0c4](https://github.com/homuler/MediaPipeUnityPlugin/commit/98cb0c432d710623a53994cdf3a47e9e1db1ff5a))
+* **sample:** front camera image is not rotated properly ([#504](https://github.com/homuler/MediaPipeUnityPlugin/issues/504)) ([9d47f7c](https://github.com/homuler/MediaPipeUnityPlugin/commit/9d47f7c0e7cea557c4feba3dd468901c65bd601c))
+* **sample:** GetNativeTexturePtr may never return on M1 Mac ([#505](https://github.com/homuler/MediaPipeUnityPlugin/issues/505)) ([9d7e390](https://github.com/homuler/MediaPipeUnityPlugin/commit/9d7e390b6012b2f5ebed14de599d90821f4f7f62))
+
 ### [0.8.3](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.8.2...v0.8.3) (2022-02-27)
 
 

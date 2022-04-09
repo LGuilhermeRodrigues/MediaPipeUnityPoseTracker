@@ -4,24 +4,22 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-using UnityEngine;
-
 namespace Mediapipe.Unity
 {
   public class MaskAnnotationController : AnnotationController<MaskAnnotation>
   {
-    [SerializeField] private int _maskWidth = 512;
-    [SerializeField] private int _maskHeight = 512;
-    [SerializeField, Range(0, 1)] private float _minAlpha = 0.9f;
-    [SerializeField, Range(0, 1)] private float _maxAlpha = 1.0f;
+    private int _maskWidth;
+    private int _maskHeight;
 
     private ImageFrame _currentTarget;
-    private byte[] _maskArray;
+    private float[] _maskArray;
 
-    public void InitScreen()
+    public void InitScreen(int maskWidth, int maskHeight)
     {
-      _maskArray = new byte[_maskWidth * _maskHeight];
-      annotation.InitScreen();
+      _maskWidth = maskWidth;
+      _maskHeight = maskHeight;
+      _maskArray = new float[_maskWidth * _maskHeight];
+      annotation.Init(_maskWidth, _maskHeight);
     }
 
     public void DrawNow(ImageFrame target)
@@ -41,14 +39,15 @@ namespace Mediapipe.Unity
     {
       if (imageFrame != null)
       {
-        var _ = imageFrame.GetChannel(0, isMirrored, _maskArray);
+        // NOTE: assume that the image is transformed properly by calculators.
+        var _ = imageFrame.TryReadChannelNormalized(0, _maskArray);
       }
     }
 
     protected override void SyncNow()
     {
       isStale = false;
-      annotation.Draw(_maskArray, _maskWidth, _maskHeight, _minAlpha, _maxAlpha);
+      annotation.Draw(_currentTarget == null ? null : _maskArray, _maskWidth, _maskHeight);
     }
   }
 }

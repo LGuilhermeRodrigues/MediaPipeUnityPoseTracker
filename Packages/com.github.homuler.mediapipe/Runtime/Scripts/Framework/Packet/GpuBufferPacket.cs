@@ -10,7 +10,11 @@ namespace Mediapipe
 {
   public class GpuBufferPacket : Packet<GpuBuffer>
   {
-    public GpuBufferPacket() : base() { }
+    /// <summary>
+    ///   Creates an empty <see cref="GpuBufferPacket" /> instance.
+    /// </summary>
+    public GpuBufferPacket() : base(true) { }
+
     public GpuBufferPacket(IntPtr ptr, bool isOwner = true) : base(ptr, isOwner) { }
 
     public GpuBufferPacket(GpuBuffer gpuBuffer) : base()
@@ -21,13 +25,18 @@ namespace Mediapipe
       this.ptr = ptr;
     }
 
-    public GpuBufferPacket(GpuBuffer gpuBuffer, Timestamp timestamp)
+    public GpuBufferPacket(GpuBuffer gpuBuffer, Timestamp timestamp) : base()
     {
       UnsafeNativeMethods.mp__MakeGpuBufferPacket_At__Rgb_Rts(gpuBuffer.mpPtr, timestamp.mpPtr, out var ptr).Assert();
       GC.KeepAlive(timestamp);
       gpuBuffer.Dispose(); // respect move semantics
 
       this.ptr = ptr;
+    }
+
+    public GpuBufferPacket At(Timestamp timestamp)
+    {
+      return At<GpuBufferPacket>(timestamp);
     }
 
     public override GpuBuffer Get()
