@@ -126,6 +126,7 @@ OPENCV_3RDPARTY_LIBS = [
     "zlib",
 ]
 
+# ENABLE_NEON=ON
 OPENCV_3RDPARTY_LIBS_M1 = OPENCV_3RDPARTY_LIBS + ["tegra_hal"]
 
 define_string_dict(
@@ -191,13 +192,41 @@ define_string_dict(
 )
 
 define_string_dict(
-    name = "*nix_cache_entries",
+    name = "*nix_build_entries",
     value = {
         # https://github.com/opencv/opencv/issues/19846
         "WITH_LAPACK": "OFF",
         "WITH_PTHREADS": "ON",
         "WITH_PTHREADS_PF": "ON",
     },
+)
+
+define_string_dict(
+    name = "darwin_arch_entries",
+    value = select({
+        "@cpuinfo//:macos_arm64": {
+            "CMAKE_SYSTEM_NAME": "Darwin",
+            "CMAKE_SYSTEM_PROCESSOR": "arm64",
+            "CMAKE_SYSTEM_ARCHITECTURES": "arm64",
+            "CMAKE_OSX_ARCHITECTURES": "arm64",
+        },
+        "//conditions:default": {
+            "CMAKE_SYSTEM_NAME": "Darwin",
+            "CMAKE_SYSTEM_PROCESSOR": "x86_64",
+            "CMAKE_SYSTEM_ARCHITECTURES": "x86_64",
+            "CMAKE_OSX_ARCHITECTURES": "x86_64",
+        },
+    })
+)
+
+merge_dict(
+    name = "*nix_cache_entries",
+    deps = [
+        ":*nix_build_entries",
+    ] + select({
+        "@bazel_tools//src/conditions:darwin": [":darwin_arch_entries"],
+        "//conditions:default": [],
+    }),
 )
 
 merge_dict(
@@ -244,7 +273,7 @@ cmake(
         ":cmake_dynamic": [],
         ":dbg_cmake_static_win": ["staticlib/%sd.lib" % lib for lib in OPENCV_3RDPARTY_LIBS],
         "@bazel_tools//src/conditions:windows": ["staticlib/%s.lib" % lib for lib in OPENCV_3RDPARTY_LIBS],
-        "@bazel_tools//src/conditions:darwin_arm64": ["share/OpenCV/3rdparty/lib/lib%s.a" % lib for lib in OPENCV_3RDPARTY_LIBS_M1],
+        "@cpuinfo//:macos_arm64": ["share/OpenCV/3rdparty/lib/lib%s.a" % lib for lib in OPENCV_3RDPARTY_LIBS_M1],
         "//conditions:default": ["share/OpenCV/3rdparty/lib/lib%s.a" % lib for lib in OPENCV_3RDPARTY_LIBS],
     }) + select({
         ":cmake_static": [],

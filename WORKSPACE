@@ -18,7 +18,7 @@ bazel_skylib_workspace()
 
 load("@bazel_skylib//lib:versions.bzl", "versions")
 
-versions.check(minimum_bazel_version = "4.2.1")
+versions.check(minimum_bazel_version = "5.2.0")
 
 http_archive(
     name = "rules_pkg",
@@ -63,11 +63,11 @@ http_archive(
         "@//third_party:mediapipe_visibility.diff",
         "@//third_party:mediapipe_model_path.diff",
         "@//third_party:mediapipe_extension.diff",
-        "@//third_party:mediapipe_emscripten_patch.diff",
+        # "@//third_party:mediapipe_emscripten_patch.diff",
     ],
-    sha256 = "54ce6da9f167d34fe53f928c804b3bc1fd1dd8fe2b32ca4bf0b63325d34680ac",
-    strip_prefix = "mediapipe-0.8.9",
-    urls = ["https://github.com/google/mediapipe/archive/v0.8.9.tar.gz"],
+    sha256 = "6b43a4304ca4aa3a698906e4b4ff696d698d0b788baffd8284c03632712b1020",
+    strip_prefix = "mediapipe-0.8.10",
+    urls = ["https://github.com/google/mediapipe/archive/v0.8.10.tar.gz"],
 )
 
 # ABSL cpp library lts_2021_03_24, patch 2.
@@ -122,12 +122,13 @@ http_archive(
     urls = ["https://github.com/google/googletest/archive/4ec4cd23f486bf70efcc5d2caa40f24368f752e3.zip"],
 )
 
-# Google Benchmark library.
+# Google Benchmark library v1.6.1 released on 2022-01-10.
 http_archive(
     name = "com_google_benchmark",
     build_file = "@com_google_mediapipe//third_party:benchmark.BUILD",
-    strip_prefix = "benchmark-main",
-    urls = ["https://github.com/google/benchmark/archive/main.zip"],
+    sha256 = "6132883bc8c9b0df5375b16ab520fac1a85dc9e4cf5be59480448ece74b278d4",
+    strip_prefix = "benchmark-1.6.1",
+    urls = ["https://github.com/google/benchmark/archive/refs/tags/v1.6.1.tar.gz"],
 )
 
 # gflags needed by glog
@@ -264,13 +265,13 @@ new_local_repository(
 new_local_repository(
     name = "macos_opencv",
     build_file = "@com_google_mediapipe//third_party:opencv_macos.BUILD",
-    path = "/usr/local/opt/opencv@3",
+    path = "/usr/local",
 )
 
 new_local_repository(
     name = "macos_arm64_opencv",
     build_file = "@com_google_mediapipe//third_party:opencv_macos.BUILD",
-    path = "/opt/homebrew/opt/opencv@3",
+    path = "/opt/homebrew",
 )
 
 new_local_repository(
@@ -333,6 +334,22 @@ load("@local_config_android//:android_configure.bzl", "android_workspace")
 android_workspace()
 
 # iOS basic build deps.
+http_archive(
+    name = "build_bazel_apple_support",
+    patch_args = [
+        "-p1",
+    ],
+    patches = [
+        "@//third_party:build_bazel_apple_support_transitions.diff",
+    ],
+    sha256 = "df317473b5894dd8eb432240d209271ebc83c76bb30c55481374b36ddf1e4fd1",
+    url = "https://github.com/bazelbuild/apple_support/releases/download/1.0.0/apple_support.1.0.0.tar.gz",
+)
+
+load(
+    "@build_bazel_apple_support//lib:repositories.bzl",
+    "apple_support_dependencies",
+)
 
 http_archive(
     name = "build_bazel_rules_apple",
@@ -344,8 +361,8 @@ http_archive(
         "@com_google_mediapipe//third_party:build_bazel_rules_apple_bypass_test_runner_check.diff",
         "@//third_party:build_bazel_rules_apple_validation.diff",
     ],
-    sha256 = "77e8bf6fda706f420a55874ae6ee4df0c9d95da6c7838228b26910fc82eea5a2",
-    url = "https://github.com/bazelbuild/rules_apple/releases/download/0.32.0/rules_apple.0.32.0.tar.gz",
+    sha256 = "36072d4f3614d309d6a703da0dfe48684ec4c65a89611aeb9590b45af7a3e592",
+    url = "https://github.com/bazelbuild/rules_apple/releases/download/1.0.1/rules_apple.1.0.1.tar.gz",
 )
 
 load(
@@ -361,21 +378,6 @@ load(
 )
 
 swift_rules_dependencies()
-
-http_archive(
-    name = "build_bazel_apple_support",
-    sha256 = "741366f79d900c11e11d8efd6cc6c66a31bfb2451178b58e0b5edc6f1db17b35",
-    urls = [
-        "https://github.com/bazelbuild/apple_support/releases/download/0.10.0/apple_support.0.10.0.tar.gz",
-    ],
-)
-
-load(
-    "@build_bazel_apple_support//lib:repositories.bzl",
-    "apple_support_dependencies",
-)
-
-apple_support_dependencies()
 
 # More iOS deps.
 
@@ -399,10 +401,10 @@ http_archive(
 )
 
 # Tensorflow repo should always go after the other external dependencies.
-# 2021-12-02
-_TENSORFLOW_GIT_COMMIT = "18a1dc0ba806dc023808531f0373d9ec068e64bf"
+# 2022-02-15
+_TENSORFLOW_GIT_COMMIT = "a3419acc751dfc19caf4d34a1594e1f76810ec58"
 
-_TENSORFLOW_SHA256 = "85b90416f7a11339327777bccd634de00ca0de2cf334f5f0727edcb11ff9289a"
+_TENSORFLOW_SHA256 = "b95b2a83632d4055742ae1a2dcc96b45da6c12a339462dbc76c8bca505308e3a"
 
 http_archive(
     name = "org_tensorflow",
@@ -411,10 +413,9 @@ http_archive(
     ],
     patches = [
         "@com_google_mediapipe//third_party:org_tensorflow_compatibility_fixes.diff",
-        "@com_google_mediapipe//third_party:org_tensorflow_objc_cxx17.diff",
         # Diff is generated with a script, don't update it manually.
         "@com_google_mediapipe//third_party:org_tensorflow_custom_ops.diff",
-        "@//third_party:tensorflow_xnnpack_emscripten_fixes.diff",
+        # "@//third_party:tensorflow_xnnpack_emscripten_fixes.diff",
     ],
     sha256 = _TENSORFLOW_SHA256,
     strip_prefix = "tensorflow-%s" % _TENSORFLOW_GIT_COMMIT,

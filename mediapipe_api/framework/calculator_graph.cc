@@ -24,15 +24,6 @@ MpReturnCode mp_CalculatorGraph__(mediapipe::CalculatorGraph** graph_out) {
 
 void mp_CalculatorGraph__delete(mediapipe::CalculatorGraph* graph) { delete graph; }
 
-MpReturnCode mp_CalculatorGraph__PKc(const char* text_format_config, mediapipe::CalculatorGraph** graph_out) {
-  TRY_ALL
-    mediapipe::CalculatorGraphConfig config;
-    auto result = google::protobuf::TextFormat::ParseFromString(text_format_config, &config);
-    *graph_out = result ? new mediapipe::CalculatorGraph(config) : nullptr;
-    RETURN_CODE(MpReturnCode::Success);
-  CATCH_ALL
-}
-
 MpReturnCode mp_CalculatorGraph__PKc_i(const char* serialized_config, int size, mediapipe::CalculatorGraph** graph_out) {
   TRY_ALL
     auto config = ParseFromStringAsCalculatorGraphConfig(serialized_config, size);
@@ -72,7 +63,12 @@ MpReturnCode mp_CalculatorGraph__ObserveOutputStream__PKc_PF_b(mediapipe::Calcul
     auto status = graph->ObserveOutputStream(
         stream_name,
         [graph, stream_id, packet_callback](const mediapipe::Packet& packet) -> ::absl::Status {
-          return absl::Status{std::move(*packet_callback(graph, stream_id, packet))};
+          auto status_args = packet_callback(graph, stream_id, packet);
+          auto callback_status = absl::Status{status_args.code, absl::NullSafeStringView((const char*)status_args.message)};
+          if (status_args.message != nullptr) {
+            mp_api::freeHGlobal(status_args.message);
+          }
+          return std::move(callback_status);
         },
         observe_timestamp_bounds);
     *status_out = new absl::Status{std::move(status)};

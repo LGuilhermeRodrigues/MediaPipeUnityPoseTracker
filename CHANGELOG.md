@@ -2,6 +2,83 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.10.1](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.10.0...v0.10.1) (2022-07-09)
+
+
+### Features
+
+* **objectron:** set confidence parameters at runtime ([#605](https://github.com/homuler/MediaPipeUnityPlugin/issues/605)) ([af86a8e](https://github.com/homuler/MediaPipeUnityPlugin/commit/af86a8e4e7649d63dcb4af2505bc33610a96cbed))
+
+
+### Bug Fixes
+
+* docker freezes when building a Docker Windows image ([#631](https://github.com/homuler/MediaPipeUnityPlugin/issues/631)) ([727b7ff](https://github.com/homuler/MediaPipeUnityPlugin/commit/727b7ff6c7926a90c0b348adfa973c31b67a3a1c))
+* OpenCV paths os macOS ([#592](https://github.com/homuler/MediaPipeUnityPlugin/issues/592)) ([358f7b9](https://github.com/homuler/MediaPipeUnityPlugin/commit/358f7b9ac6f08d4e4f7b1d1fac9d5458e2d1730f))
+* some tests fail on Windows ([#644](https://github.com/homuler/MediaPipeUnityPlugin/issues/644)) ([0a90ac1](https://github.com/homuler/MediaPipeUnityPlugin/commit/0a90ac1798b0a18300ee67a97c6756edb9e98e96))
+
+## [0.10.0](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.9.3...v0.10.0) (2022-05-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* Unity 2021 (#588)
+* **plugin:** Logger.minLogLevel -> Logger.MinLogLevel (#580)
+* callback functions return StatusArgs instead of Status (#574)
+* coordinate transform and other helper methods (#569)
+
+### Features
+
+* add scenes for tutorial ([#582](https://github.com/homuler/MediaPipeUnityPlugin/issues/582)) ([c9e0317](https://github.com/homuler/MediaPipeUnityPlugin/commit/c9e0317ab336b2f9515bc81935eef5c76d032fd9))
+* **plugin:** add missing Status factory methods ([#573](https://github.com/homuler/MediaPipeUnityPlugin/issues/573)) ([ba48f78](https://github.com/homuler/MediaPipeUnityPlugin/commit/ba48f781aafeb23c32063f57a396210cac9af72a))
+* **plugin:** implement GpuManager ([#579](https://github.com/homuler/MediaPipeUnityPlugin/issues/579)) ([1d9196a](https://github.com/homuler/MediaPipeUnityPlugin/commit/1d9196aebddd64bf8b7b0cf24ea3b746db89f435))
+* **plugin:** mediapipe v0.8.10 ([#585](https://github.com/homuler/MediaPipeUnityPlugin/issues/585)) ([738f3f7](https://github.com/homuler/MediaPipeUnityPlugin/commit/738f3f7eccc391bac943e68bbc2178c97a5db124))
+
+
+### Bug Fixes
+
+* **plugin:** OutputStream#TryGetNext throws if it's not started ([#581](https://github.com/homuler/MediaPipeUnityPlugin/issues/581)) ([9e99400](https://github.com/homuler/MediaPipeUnityPlugin/commit/9e9940046499703ecbcf6df2df5762729e4efd27))
+* some tests abort on Windows ([#572](https://github.com/homuler/MediaPipeUnityPlugin/issues/572)) ([bd2c390](https://github.com/homuler/MediaPipeUnityPlugin/commit/bd2c390057f657a4876ab264d3ce82a358405805))
+
+
+* callback functions return StatusArgs instead of Status ([#574](https://github.com/homuler/MediaPipeUnityPlugin/issues/574)) ([d334e80](https://github.com/homuler/MediaPipeUnityPlugin/commit/d334e80abb8c1d922191e19b10f5297b358553e0))
+* coordinate transform and other helper methods ([#569](https://github.com/homuler/MediaPipeUnityPlugin/issues/569)) ([527d3b1](https://github.com/homuler/MediaPipeUnityPlugin/commit/527d3b10ae593d43c74f466c5e23b2c2440c7b30))
+* **plugin:** Logger.minLogLevel -> Logger.MinLogLevel ([#580](https://github.com/homuler/MediaPipeUnityPlugin/issues/580)) ([456a822](https://github.com/homuler/MediaPipeUnityPlugin/commit/456a822e5f265ce789e071e7c73cd60e913d4657))
+
+
+### build
+
+* Unity 2021 ([#588](https://github.com/homuler/MediaPipeUnityPlugin/issues/588)) ([5d392db](https://github.com/homuler/MediaPipeUnityPlugin/commit/5d392db8f8fbd5d3d0ddc7d5015a637b3412ae26))
+
+### [0.9.3](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.9.2...v0.9.3) (2022-05-16)
+
+### [0.9.2](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.9.1...v0.9.2) (2022-05-16)
+
+
+### Bug Fixes
+
+* Enumerator can be invalid when an item is deleted ([#565](https://github.com/homuler/MediaPipeUnityPlugin/issues/565)) ([d8e061a](https://github.com/homuler/MediaPipeUnityPlugin/commit/d8e061a1ea5668e4b0c3ec4a3ca1abb3232f1c0c))
+* **plugin:** check if the target local asset is missing ([#562](https://github.com/homuler/MediaPipeUnityPlugin/issues/562)) ([e3fa454](https://github.com/homuler/MediaPipeUnityPlugin/commit/e3fa454f30bced1f9342e8a3b41951dbe9eebc03))
+* **plugin:** preserve Packet constructors for Reflection ([#561](https://github.com/homuler/MediaPipeUnityPlugin/issues/561)) ([a6f27b1](https://github.com/homuler/MediaPipeUnityPlugin/commit/a6f27b127440825aa794a6744e1c0a7d2c6431ed))
+* **plugin:** prevent Status returned by a packet callback from being GCed prematurely ([#563](https://github.com/homuler/MediaPipeUnityPlugin/issues/563)) ([f4301af](https://github.com/homuler/MediaPipeUnityPlugin/commit/f4301af93dcca68514311d44ad6014c5b8ea5523))
+* **sample:** dispose OutputStream if only it exists ([#564](https://github.com/homuler/MediaPipeUnityPlugin/issues/564)) ([dcee215](https://github.com/homuler/MediaPipeUnityPlugin/commit/dcee215092b169a155d7780370d9b055df46d956))
+* **sample:** the default video/image is not selected ([#543](https://github.com/homuler/MediaPipeUnityPlugin/issues/543)) ([77ba1a4](https://github.com/homuler/MediaPipeUnityPlugin/commit/77ba1a4d2249b8db09b3a1e975a01f6e50d21e33))
+
+### [0.9.1](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.9.0...v0.9.1) (2022-04-19)
+
+
+### Features
+
+* **sample:** Holistic Segmentation Mask ([#521](https://github.com/homuler/MediaPipeUnityPlugin/issues/521)) ([30e968c](https://github.com/homuler/MediaPipeUnityPlugin/commit/30e968c66a168f69c33084593ee68e5b4a7e9533))
+* **sample:** MIN_DETECTION_CONFIDENCE and MIN_TRACKING_CONFIDENCE ([#523](https://github.com/homuler/MediaPipeUnityPlugin/issues/523)) ([5222faa](https://github.com/homuler/MediaPipeUnityPlugin/commit/5222faa9a21e1c523614f8c082b92ec521c2005b))
+* **sample:** Pose Segmentation Mask ([#520](https://github.com/homuler/MediaPipeUnityPlugin/issues/520)) ([b25430d](https://github.com/homuler/MediaPipeUnityPlugin/commit/b25430d68f4963940b6f79c5e7209e2a8f1bd6d6))
+* **sample:** Selfie Segmentation ([#522](https://github.com/homuler/MediaPipeUnityPlugin/issues/522)) ([7d6090d](https://github.com/homuler/MediaPipeUnityPlugin/commit/7d6090de1ae39e040e9a463228ae73cc5a388b04))
+* set Protobuf LogHandler ([#526](https://github.com/homuler/MediaPipeUnityPlugin/issues/526)) ([cc3ac5c](https://github.com/homuler/MediaPipeUnityPlugin/commit/cc3ac5ce25d1f2af3db6f8da4ba44897e31277b3))
+
+
+### Bug Fixes
+
+* constructor should throw if it fails to initialize ([#533](https://github.com/homuler/MediaPipeUnityPlugin/issues/533)) ([e58408e](https://github.com/homuler/MediaPipeUnityPlugin/commit/e58408e142e8aec45dd90351bd021e42c54204a5))
+
 ## [0.9.0](https://github.com/homuler/MediaPipeUnityPlugin/compare/v0.8.4...v0.9.0) (2022-04-07)
 
 

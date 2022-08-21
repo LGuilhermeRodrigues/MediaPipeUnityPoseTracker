@@ -1,6 +1,5 @@
 .nuget/
 .vscode/
-.idea
 .vs/
 .DS_Store
 .python-version
@@ -15,13 +14,15 @@
 /[Cc]ode[Cc]overage/
 *.csproj
 *.sln
+*.unitypackage
 
 *.aar
 *.bc
 *.dll
 *.dylib
 *.so
-*.framework/
+**/*.framework/*
+!**/*.framework/*.meta
 
 bazel-*
 
@@ -30,9 +31,5 @@ Assets/StreamingAssets*
 Packages/com.github.homuler.mediapipe/Runtime/Resources/*
 !Packages/com.github.homuler.mediapipe/Runtime/Resources/*.meta
 Packages/com.github.homuler.mediapipe/Runtime/Resources/object_detection_3d.bytes.meta
-Packages/com.github.homuler.mediapipe/Runtime/Plugins/Protobuf*
+Packages/com.github.homuler.mediapipe/Runtime/Plugins/Protobuf/*.dll
 Packages/com.github.homuler.mediapipe/Runtime/Scripts/Protobuf/**/*.cs
-Packages/ErrorProne*
-Packages/Google*
-Packages/Microsoft.Unity.Analyzers*
-Packages/System*
